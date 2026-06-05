@@ -25,13 +25,8 @@ from app.api.advanced_routes import router as advanced_router
 from app.models import init_db
 from app.api.scheduler import get_scheduler, init_scheduler, shutdown_scheduler
 from app.api.sync import background_cache_maintenance, background_get_stats
-from app.api.middleware import (
-    RequestIdMiddleware,
-    ErrorLoggingMiddleware,
-    APIVersionMiddleware,
-    SecurityHeadersMiddleware,
-    RateLimitMiddleware
-)
+from app.api.middleware import CombinedMiddleware
+
 
 # Configure logging
 logging.basicConfig(
@@ -71,16 +66,10 @@ app.add_middleware(
 # ============================================================================
 # Production Hardening Middleware (Phase 3.4)
 # ============================================================================
-# Note: Middleware is applied in reverse order, so RequestIdMiddleware
-# (first) will be the outermost layer, executing first on requests
-# and last on responses.
+# Combined middleware that handles all middleware in a single class to avoid
+# async/await initialization issues with multiple middleware layers.
 
-# Apply middleware in order (outermost to innermost)
-app.add_middleware(RateLimitMiddleware, requests_per_minute=100)
-app.add_middleware(SecurityHeadersMiddleware)
-app.add_middleware(APIVersionMiddleware, current_version="v1")
-app.add_middleware(ErrorLoggingMiddleware)
-app.add_middleware(RequestIdMiddleware)
+app.add_middleware(CombinedMiddleware, requests_per_minute=100, current_version="v1")
 
 # Include routers
 app.include_router(repos_router)
@@ -154,6 +143,10 @@ async def global_exception_handler(request: Request, exc: Exception):
     Global exception handler for all unhandled exceptions.
     Logs error and returns structured response.
     """
+    import traceback
+    print(f"🔥 EXCEPTION: {type(exc).__name__}: {exc}")  # add this
+    traceback.print_exc()  # add this
+
     logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
     
     return JSONResponse(

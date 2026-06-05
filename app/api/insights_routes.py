@@ -292,16 +292,42 @@ async def analyze_user_profile(
 @router.get("/health")
 async def insights_health():
     """Health check for insights service - NVIDIA NIM."""
-    insights_manager = get_insights_manager()
-    has_api_key = insights_manager.client is not None
-    rate_limit_stats = insights_manager.rate_limiter.get_stats()
+
+    try:
+        insights_manager = get_insights_manager()
+        print(f"DEBUG: Manager created, client={insights_manager.client is not None}")
+        
+        has_api_key = insights_manager.client is not None
+        rate_limit_stats = insights_manager.rate_limiter.get_stats()
+
+        return {
+            "status": "healthy",
+            "insights_service": "NVIDIA NIM",
+            "nim_configured": has_api_key,
+            "fallback_mode": not has_api_key,
+            "rate_limit": rate_limit_stats,
+            "rate_limit_per_minute": 40,
+            "timestamp": datetime.utcnow()
+        }
+    except Exception as e:
+        print(f"DEBUG ERROR: {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
+
+
+
+
+    # insights_manager = get_insights_manager()
+    # has_api_key = insights_manager.client is not None
+    # rate_limit_stats = insights_manager.rate_limiter.get_stats()
     
-    return {
-        "status": "healthy",
-        "insights_service": "NVIDIA NIM",
-        "nim_configured": has_api_key,
-        "fallback_mode": not has_api_key,
-        "rate_limit": rate_limit_stats,
-        "rate_limit_per_minute": 40,
-        "timestamp": datetime.utcnow()
-    }
+    # return {
+    #     "status": "healthy",
+    #     "insights_service": "NVIDIA NIM",
+    #     "nim_configured": has_api_key,
+    #     "fallback_mode": not has_api_key,
+    #     "rate_limit": rate_limit_stats,
+    #     "rate_limit_per_minute": 40,
+    #     "timestamp": datetime.utcnow()
+    # }

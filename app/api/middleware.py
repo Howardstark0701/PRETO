@@ -154,3 +154,39 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
         response.headers["X-Request-ID"] = request_id
         
         return response
+
+
+class CombinedMiddleware(BaseHTTPMiddleware):
+    """
+    Combined middleware that runs all middleware in a single class to avoid
+    async/await initialization issues.
+    """
+    
+    def __init__(self, app, requests_per_minute: int = 100, current_version: str = "v1"):
+        super().__init__(app)
+        self.requests_per_minute = requests_per_minute
+        self.current_version = current_version
+        self.counter = 0
+    
+    async def dispatch(self, request: Request, call_next):
+        """Execute all middleware logic in sequence."""
+        try:
+            # Add request ID
+            self.counter += 1
+            request_id = f"{datetime.utcnow().timestamp()}-{self.counter}"
+            request.state.request_id = request_id
+            
+            # Call next handler
+            response = await call_next(request)
+            
+            # Add security headers
+            response.headers["X-Request-ID"] = request_id
+            response.headers["X-Content-Type-Options"] = "nosniff"
+            response.headers["X-Frame-Options"] = "DENY"
+            response.headers["X-XSS-Protection"] = "1; mode=block"
+            
+            return response
+        
+        except Exception as exc:
+            logger.error(f"Middleware error: {str(exc)}", exc_info=True)
+            raise

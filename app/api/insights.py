@@ -78,7 +78,7 @@ class NIMInsights:
         self.rate_limiter = RateLimiter(MAX_REQUESTS_PER_MINUTE)
         
         if self.api_key and self.api_key != "sk-ant-your-api-key-here":
-            self.client = httpx.AsyncClient(
+            self.client = httpx.Client(
                 headers={
                     "Authorization": f"Bearer {self.api_key}",
                     "content-type": "application/json"
@@ -212,45 +212,13 @@ class NIMInsights:
             f"Provide a clear, concise answer based on the provided data."
         )
     
-    def _call_claude(self, prompt: str) -> str:
-        """Call Claude API."""
-        if not self.client:
-            raise ValueError("Claude client not initialized")
-        
-        try:
-            response = self.client.post(
-                CLAUDE_API_URL,
-                json={
-                    "model": CLAUDE_MODEL,
-                    "max_tokens": 1024,
-                    "messages": [
-                        {
-                            "role": "user",
-                            "content": prompt
-                        }
-                    ]
-                },
-                timeout=30.0
-            )
-            
-            if response.status_code != 200:
-                logger.error(f"Claude API error: {response.status_code} - {response.text}")
-                raise Exception(f"Claude API error: {response.status_code}")
-            
-            data = response.json()
-            return data.get("content", [{}])[0].get("text", "No response from Claude")
-        
-        except Exception as e:
-            logger.error(f"Claude API call failed: {str(e)}")
-            raise
-    
     async def _call_nim(self, prompt: str) -> str:
         """Call NVIDIA NIM API."""
         if not self.client:
             raise ValueError("NIM client not initialized")
         
         try:
-            response = await self.client.post(
+            response = self.client.post(
                 f"{NIM_API_URL}/chat/completions",
                 json={
                     "model": NIM_MODEL,
@@ -278,8 +246,8 @@ class NIMInsights:
             logger.error(f"NIM API call failed: {str(e)}")
             raise
     
-
-        """Provide fallback analysis when Claude is not available."""
+    def _get_fallback_analysis(self, repositories: List[Dict], analysis_type: str) -> str:
+        """Provide fallback analysis when NIM is not available."""
         if not repositories:
             return "No repositories to analyze."
         
