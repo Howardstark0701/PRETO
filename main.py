@@ -20,9 +20,18 @@ import asyncio
 
 from app.api.routes import router as repos_router
 from app.api.auth_routes import router as auth_router
+from app.api.insights_routes import router as insights_router
+from app.api.advanced_routes import router as advanced_router
 from app.models import init_db
 from app.api.scheduler import get_scheduler, init_scheduler, shutdown_scheduler
 from app.api.sync import background_cache_maintenance, background_get_stats
+from app.api.middleware import (
+    RequestIdMiddleware,
+    ErrorLoggingMiddleware,
+    APIVersionMiddleware,
+    SecurityHeadersMiddleware,
+    RateLimitMiddleware
+)
 
 # Configure logging
 logging.basicConfig(
@@ -59,9 +68,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ============================================================================
+# Production Hardening Middleware (Phase 3.4)
+# ============================================================================
+# Note: Middleware is applied in reverse order, so RequestIdMiddleware
+# (first) will be the outermost layer, executing first on requests
+# and last on responses.
+
+# Apply middleware in order (outermost to innermost)
+app.add_middleware(RateLimitMiddleware, requests_per_minute=100)
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(APIVersionMiddleware, current_version="v1")
+app.add_middleware(ErrorLoggingMiddleware)
+app.add_middleware(RequestIdMiddleware)
+
 # Include routers
 app.include_router(repos_router)
 app.include_router(auth_router)
+app.include_router(insights_router)
+app.include_router(advanced_router)
 
 
 # ============================================================================
