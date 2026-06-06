@@ -11,6 +11,7 @@ Last Updated: June 5, 2026
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.staticfiles import StaticFiles
 from datetime import datetime
 from typing import Dict, Optional
 from dotenv import load_dotenv
@@ -79,6 +80,22 @@ app.include_router(github_oauth_router)
 app.include_router(insights_router)
 app.include_router(advanced_router)
 app.include_router(dashboard_router)
+
+# ── Serve React frontend (production) ─────────────────────────────────────
+# In production the frontend dist is built into frontend/dist/
+# We serve it as static files so a single container handles both API + UI.
+_FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "frontend", "dist")
+if os.path.isdir(_FRONTEND_DIST):
+    app.mount("/assets", StaticFiles(directory=os.path.join(_FRONTEND_DIST, "assets")), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_spa(full_path: str):
+        """Catch-all: serve index.html for any non-API route (SPA client-side routing)."""
+        from fastapi.responses import FileResponse
+        index = os.path.join(_FRONTEND_DIST, "index.html")
+        if os.path.isfile(index):
+            return FileResponse(index)
+        return JSONResponse({"detail": "Frontend not found"}, status_code=404)
 
 
 # ============================================================================

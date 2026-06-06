@@ -1,0 +1,50 @@
+services:
+  # PRETO API — FastAPI backend + React frontend (single service)
+  - type: web
+    name: preto-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+
+    envVars:
+      - key: GITHUB_TOKEN
+        sync: false          # Set in Render dashboard
+
+      - key: GITHUB_CLIENT_ID
+        sync: false
+
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+
+      - key: GITHUB_REDIRECT_URI
+        value: https://preto-api.onrender.com/api/auth/github/callback
+
+      - key: FRONTEND_URL
+        value: https://preto-api.onrender.com
+
+      - key: NIM_API_KEY
+        sync: false
+
+      - key: NIM_API_URL
+        value: https://integrate.api.nvidia.com/v1
+
+      - key: NIM_MODEL
+        value: meta/llama-3.1-70b-instruct
+
+      - key: MAX_REQUESTS_PER_MINUTE
+        value: "40"
+
+      - key: SECRET_KEY
+        generateValue: true  # Render auto-generates a secure random value
+
+      - key: API_HOST
+        value: "0.0.0.0"
+
+      - key: API_PORT
+        value: "8000"
+
+      - key: DEBUG_MODE
+        value: "false"
+
+    healthCheckPath: /api/health
+    autoDeploy: true

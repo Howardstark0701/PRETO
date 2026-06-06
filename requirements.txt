@@ -1,36 +1,36 @@
 # PRETO API Dependencies
-# Phase 3-5 - Production Ready
+# Phase 8 — Production Deployment
 
 # Web Framework
-fastapi>=0.100.0
-uvicorn[standard]>=0.23.0
-pydantic>=2.0.0
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+pydantic==2.7.1
+starlette==0.37.2
 
 # Database
-sqlalchemy>=2.0.0
-psycopg2-binary>=2.9.0
+sqlalchemy==2.0.30
+# psycopg2-binary==2.9.9  # Uncomment for PostgreSQL in production
 
 # HTTP Client
-httpx>=0.24.0
+httpx==0.27.0
 
 # Authentication
-bcrypt>=4.0.0
-
-# CORS
-starlette>=0.27.0
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.1.3
+python-multipart==0.0.9
 
 # Background Tasks
-APScheduler>=3.10.0
+APScheduler==3.10.4
 
 # Environment Variables
-python-dotenv>=1.0.0
+python-dotenv==1.0.1
 
-# Redis Cache (Phase 5)
-redis>=4.5.0
+# PDF Export
+reportlab==4.2.5
 
 # Utilities
-python-multipart>=0.0.6
-aiofiles>=23.0.0
+aiofiles==23.2.1
 
-# Production Server (for Gunicorn)
-gunicorn>=21.0.0
+# Production Server
+gunicorn==22.0.0
