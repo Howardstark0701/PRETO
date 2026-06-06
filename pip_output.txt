@@ -1,0 +1,21 @@
+Defaulting to user installation because normal site-packages is not writeable
+Collecting reportlab==4.2.5
+  Downloading reportlab-4.2.5-py3-none-any.whl.metadata (1.5 kB)
+Collecting pillow>=9.0.0 (from reportlab==4.2.5)
+  Downloading pillow-12.2.0-cp310-cp310-win_amd64.whl.metadata (9.0 kB)
+Collecting chardet (from reportlab==4.2.5)
+  Downloading chardet-7.4.3-cp310-cp310-win_amd64.whl.metadata (9.4 kB)
+Downloading reportlab-4.2.5-py3-none-any.whl (1.9 MB)
+   ---------------------------------------- 1.9/1.9 MB 4.1 MB/s  0:00:00
+Downloading pillow-12.2.0-cp310-cp310-win_amd64.whl (7.1 MB)
+   ---------------------------------------- 7.1/7.1 MB 6.2 MB/s  0:00:01
+Downloading chardet-7.4.3-cp310-cp310-win_amd64.whl (942 kB)
+   ---------------------------------------- 942.5/942.5 kB 4.4 MB/s  0:00:00
+Installing collected packages: pillow, chardet, reportlab
+  WARNING: The script chardetect.exe is installed in 'C:\Users\patha\AppData\Roaming\Python\Python310\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+
+Successfully installed chardet-7.4.3 pillow-12.2.0 reportlab-4.2.5
+
+[notice] A new release of pip is available: 25.3 -> 26.1.2
+[notice] To update, run: python.exe -m pip install --upgrade pip
