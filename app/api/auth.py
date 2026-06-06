@@ -16,17 +16,30 @@ import json
 import base64
 import hmac
 import hashlib
-import bcrypt  # Phase 4: Production security upgrade
+import os
+import secrets
+
+try:
+    import bcrypt  # Phase 4: Production security upgrade
+except ImportError:
+    bcrypt = None
 
 from app.models import SessionLocal
 
 logger = logging.getLogger(__name__)
 
 # Configuration
-SECRET_KEY = "preto-secret-key-change-in-production-9d8f7e6c5b4a3z2x1w0v"
+DEFAULT_SECRET_KEY = "preto-dev-secret-change-before-production"
+SECRET_KEY = os.getenv("SECRET_KEY", DEFAULT_SECRET_KEY)
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+if SECRET_KEY == DEFAULT_SECRET_KEY:
+    logger.warning("Using default development SECRET_KEY; set SECRET_KEY in production")
+
+if bcrypt is None:
+    logger.warning("bcrypt is not installed; using PBKDF2 fallback for local development")
 
 
 # ============================================================================
@@ -49,6 +62,16 @@ async def extract_bearer_token(authorization: Optional[str] = Header(None)) -> s
 
 def hash_password(password: str) -> str:
     """Hash password using bcrypt (Phase 4 upgrade from SHA256)."""
+    if bcrypt is None:
+        salt = secrets.token_hex(16)
+        digest = hashlib.pbkdf2_hmac(
+            "sha256",
+            password.encode("utf-8"),
+            salt.encode("utf-8"),
+            200_000,
+        ).hex()
+        return f"pbkdf2_sha256${salt}${digest}"
+
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
     return hashed.decode('utf-8')
@@ -56,16 +79,32 @@ def hash_password(password: str) -> str:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify password against bcrypt hash."""
+    if hashed_password.startswith("pbkdf2_sha256$"):
+        try:
+            _, salt, expected = hashed_password.split("$", 2)
+            digest = hashlib.pbkdf2_hmac(
+                "sha256",
+                plain_password.encode("utf-8"),
+                salt.encode("utf-8"),
+                200_000,
+            ).hex()
+            return hmac.compare_digest(digest, expected)
+        except ValueError:
+            return False
+
     try:
-        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+        if bcrypt is not None:
+            return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
     except Exception:
-        # Fallback for legacy SHA256 hashes (for migration period)
-        legacy_hash = hashlib.sha256((plain_password + SECRET_KEY).encode()).hexdigest()
-        if legacy_hash == hashed_password:
-            # Auto-migrate: rehash with bcrypt on successful login
-            logger.info(f"Legacy SHA256 password found, migrating to bcrypt")
-            return True
-        return False
+
+        pass
+
+    # Fallback for legacy SHA256 hashes (for migration period)
+    legacy_hash = hashlib.sha256((plain_password + SECRET_KEY).encode()).hexdigest()
+    if legacy_hash == hashed_password:
+        logger.info("Legacy SHA256 password found, migrating to stronger hash")
+        return True
+    return False
 
 
 # ============================================================================
