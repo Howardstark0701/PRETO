@@ -1,0 +1,47 @@
+/* PRETO — Palantir-inspired dark theme */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-base:      #0b0e14;
+  --bg-panel:     #111827;
+  --bg-card:      #161d2e;
+  --bg-hover:     #1e2a40;
+  --border:       #1f2d45;
+  --border-light: #2a3a55;
+  --accent:       #00d4b4;
+  --accent-dim:   #00907a;
+  --accent2:      #3b82f6;
+  --danger:       #ef4444;
+  --warn:         #f59e0b;
+  --text-primary: #e2e8f0;
+  --text-muted:   #64748b;
+  --text-dim:     #94a3b8;
+  --font:         'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+html, body, #root {
+  height: 100%;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-dim); }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-dim); }
+
+button {
+  font-family: var(--font);
+  cursor: pointer;
+}
+
+input, select, textarea {
+  font-family: var(--font);
+  font-size: 13px;
+}

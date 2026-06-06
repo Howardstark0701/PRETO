@@ -903,3 +903,83 @@ async def get_sync_stats():
     except Exception as e:
         logger.error(f"Error getting sync stats: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error getting sync stats: {str(e)}")
+
+
+# ============================================================================
+# Contributors Endpoint (Session 3 — Graph expansion)
+# ============================================================================
+
+@router.get(
+    "/repos/{owner}/{repo_name}/contributors",
+    summary="Get repository contributors",
+    description="Fetch top contributors for a repository (for graph analysis)",
+    tags=["repositories"]
+)
+async def get_repo_contributors(
+    owner: str,
+    repo_name: str,
+    per_page: int = Query(10, ge=1, le=30, description="Number of contributors"),
+):
+    """
+    Fetch contributors for a repository via GitHub API.
+    Used by the graph analysis page to expand the network.
+    """
+    import asyncio
+    try:
+        if not owner or not repo_name:
+            raise HTTPException(status_code=400, detail="Owner and repo_name required")
+
+        # Use the scraper's session/token
+        import httpx
+        import os
+
+        token = os.getenv("GITHUB_TOKEN", "")
+        headers = {
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+
+        url = f"https://api.github.com/repos/{owner}/{repo_name}/contributors"
+        params = {"per_page": per_page, "anon": "false"}
+
+        async with httpx.AsyncClient(headers=headers, timeout=10.0) as client:
+            resp = await asyncio.wait_for(
+                client.get(url, params=params),
+                timeout=10.0
+            )
+
+        if resp.status_code == 404:
+            raise HTTPException(status_code=404, detail=f"Repository {owner}/{repo_name} not found")
+        if resp.status_code == 403:
+            raise HTTPException(status_code=429, detail="GitHub rate limit exceeded")
+        if resp.status_code != 200:
+            raise HTTPException(status_code=502, detail=f"GitHub API error: {resp.status_code}")
+
+        contributors = resp.json()
+
+        return {
+            "owner": owner,
+            "repo": repo_name,
+            "contributors": [
+                {
+                    "login":         c.get("login"),
+                    "avatar_url":    c.get("avatar_url"),
+                    "html_url":      c.get("html_url"),
+                    "contributions": c.get("contributions", 0),
+                    "type":          c.get("type", "User"),
+                }
+                for c in contributors
+                if c.get("type") == "User"
+            ],
+            "count": len(contributors),
+        }
+
+    except HTTPException:
+        raise
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Request timed out")
+    except Exception as e:
+        logger.error(f"Contributors error for {owner}/{repo_name}: {e}")
+        raise HTTPException(status_code=502, detail=f"GitHub API error: {str(e)}")

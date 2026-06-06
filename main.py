@@ -18,9 +18,13 @@ import os
 import logging
 import asyncio
 
+# Load environment variables FIRST before any app module imports read os.getenv()
+load_dotenv()
+
 from app.api.logging_config import configure_logging
 from app.api.routes import router as repos_router
 from app.api.auth_routes import router as auth_router
+from app.api.github_oauth import router as github_oauth_router
 from app.api.insights_routes import router as insights_router
 from app.api.advanced_routes import router as advanced_router
 from app.api.dashboard import router as dashboard_router
@@ -34,9 +38,6 @@ from app.api.metrics import metrics_collector
 # Configure logging
 configure_logging()
 logger = logging.getLogger(__name__)
-
-# Load environment variables
-load_dotenv()
 
 # Initialize database
 logger.info("Initializing database...")
@@ -74,6 +75,7 @@ app.add_middleware(CombinedMiddleware, requests_per_minute=100, current_version=
 # Include routers
 app.include_router(repos_router)
 app.include_router(auth_router)
+app.include_router(github_oauth_router)
 app.include_router(insights_router)
 app.include_router(advanced_router)
 app.include_router(dashboard_router)

@@ -21,41 +21,47 @@ router = APIRouter(prefix="/api/advanced", tags=["advanced"])
 @router.post("/export")
 async def export_results(
     repositories: List[Dict] = None,
-    format: str = Query("json", description="Export format: json or csv"),
+    format: str = Query("json", description="Export format: json, csv, or pdf"),
     current_user = None,
     db: Session = Depends(get_db)
 ):
-    """
-    Export search results.
-    
-    Args:
-        repositories: Repositories to export
-        format: Format (json or csv)
-    
-    Returns:
-        Exported data
-    """
+    """Export search results as JSON, CSV, or PDF."""
     try:
         if not repositories:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Repositories required"
             )
-        
+
         manager = get_advanced_features_manager()
         exported = manager.export_search_results(repositories, format)
-        
-        media_type = "text/csv" if format == "csv" else "application/json"
-        
+
+        if format == "pdf":
+            from fastapi.responses import Response
+            return Response(
+                content=exported,
+                media_type="application/pdf",
+                headers={"Content-Disposition": "attachment; filename=preto-report.pdf"}
+            )
+        elif format == "csv":
+            from fastapi.responses import Response
+            return Response(
+                content=exported,
+                media_type="text/csv",
+                headers={"Content-Disposition": "attachment; filename=preto-export.csv"}
+            )
+
         return {
             "status": "success",
             "format": format,
             "data": exported,
             "timestamp": datetime.utcnow()
         }
-    
+
     except HTTPException:
         raise
+    except RuntimeError as e:
+        raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail=str(e))
     except Exception as e:
         logger.error(f"Export error: {str(e)}")
         raise HTTPException(

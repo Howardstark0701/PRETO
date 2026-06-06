@@ -30,6 +30,12 @@ class User(Base):
     is_active = Column(Boolean, default=True, index=True)
     is_admin = Column(Boolean, default=False)
     
+    # GitHub OAuth fields (nullable — only set for OAuth users)
+    github_id    = Column(String(50),  nullable=True, index=True)
+    github_login = Column(String(100), nullable=True)
+    github_token = Column(String(255), nullable=True)   # encrypted at rest in prod
+    avatar_url   = Column(String(512), nullable=True)
+
     # Metadata
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

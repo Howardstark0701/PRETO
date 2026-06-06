@@ -10,9 +10,148 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 import json
 import csv
-from io import StringIO
+from io import StringIO, BytesIO
 
 logger = logging.getLogger(__name__)
+
+
+# ── PDF generation (reportlab) ─────────────────────────────────────────────
+def _generate_pdf_report(repositories: List[Dict], title: str = "PRETO Export") -> bytes:
+    """Generate a PDF report from repositories using reportlab."""
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import cm
+        from reportlab.lib import colors
+        from reportlab.platypus import (
+            SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+        )
+
+        buf = BytesIO()
+        doc = SimpleDocTemplate(
+            buf, pagesize=A4,
+            leftMargin=2*cm, rightMargin=2*cm,
+            topMargin=2*cm, bottomMargin=2*cm
+        )
+
+        styles = getSampleStyleSheet()
+        teal = colors.HexColor("#00d4b4")
+        dark = colors.HexColor("#0b0e14")
+        muted = colors.HexColor("#64748b")
+
+        title_style = ParagraphStyle(
+            "PRetoTitle", parent=styles["Title"],
+            textColor=teal, fontSize=20, spaceAfter=6
+        )
+        sub_style = ParagraphStyle(
+            "PRetoSub", parent=styles["Normal"],
+            textColor=muted, fontSize=9, spaceAfter=16
+        )
+        heading_style = ParagraphStyle(
+            "PRetoHeading", parent=styles["Heading2"],
+            textColor=teal, fontSize=11, spaceBefore=12, spaceAfter=6
+        )
+        body_style = ParagraphStyle(
+            "PRetoBody", parent=styles["Normal"],
+            fontSize=8, textColor=colors.HexColor("#334155")
+        )
+
+        elements = []
+
+        # Header
+        elements.append(Paragraph("PRETO", title_style))
+        elements.append(Paragraph(
+            f"{title}  ·  Generated {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}",
+            sub_style
+        ))
+        elements.append(HRFlowable(width="100%", thickness=1, color=teal))
+        elements.append(Spacer(1, 0.4*cm))
+
+        # Summary stats
+        total_stars = sum(r.get("stargazers_count", 0) for r in repositories)
+        total_forks = sum(r.get("forks_count", 0) for r in repositories)
+        langs = {}
+        for r in repositories:
+            if r.get("language"):
+                langs[r["language"]] = langs.get(r["language"], 0) + 1
+
+        elements.append(Paragraph("SUMMARY", heading_style))
+        summary_data = [
+            ["Repositories", "Total Stars", "Total Forks", "Languages"],
+            [
+                str(len(repositories)),
+                f"{total_stars:,}",
+                f"{total_forks:,}",
+                str(len(langs))
+            ]
+        ]
+        summary_table = Table(summary_data, colWidths=[4*cm, 4*cm, 4*cm, 4*cm])
+        summary_table.setStyle(TableStyle([
+            ("BACKGROUND",  (0, 0), (-1, 0), teal),
+            ("TEXTCOLOR",   (0, 0), (-1, 0), colors.black),
+            ("FONTSIZE",    (0, 0), (-1, 0), 8),
+            ("FONTNAME",    (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE",    (0, 1), (-1, -1), 10),
+            ("FONTNAME",    (0, 1), (-1, -1), "Helvetica-Bold"),
+            ("TEXTCOLOR",   (0, 1), (-1, -1), teal),
+            ("ALIGN",       (0, 0), (-1, -1), "CENTER"),
+            ("VALIGN",      (0, 0), (-1, -1), "MIDDLE"),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#f8fafc")]),
+            ("BOX",         (0, 0), (-1, -1), 0.5, colors.HexColor("#e2e8f0")),
+            ("INNERGRID",   (0, 0), (-1, -1), 0.25, colors.HexColor("#e2e8f0")),
+            ("TOPPADDING",  (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING",(0,0), (-1, -1), 6),
+        ]))
+        elements.append(summary_table)
+        elements.append(Spacer(1, 0.4*cm))
+
+        # Repository table
+        elements.append(Paragraph("REPOSITORIES", heading_style))
+        headers = ["Repository", "Language", "Stars", "Forks", "Description"]
+        col_widths = [5*cm, 2.5*cm, 2*cm, 2*cm, 6*cm]
+
+        table_data = [headers]
+        for repo in repositories[:50]:  # Cap at 50 rows
+            desc = repo.get("description") or ""
+            if len(desc) > 60:
+                desc = desc[:57] + "..."
+            table_data.append([
+                repo.get("name", ""),
+                repo.get("language") or "—",
+                f"{repo.get('stargazers_count', 0):,}",
+                f"{repo.get('forks_count', 0):,}",
+                desc,
+            ])
+
+        repo_table = Table(table_data, colWidths=col_widths, repeatRows=1)
+        repo_table.setStyle(TableStyle([
+            ("BACKGROUND",    (0, 0), (-1, 0), dark),
+            ("TEXTCOLOR",     (0, 0), (-1, 0), teal),
+            ("FONTNAME",      (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE",      (0, 0), (-1, -1), 7.5),
+            ("ROWBACKGROUNDS",(0, 1), (-1, -1), [colors.white, colors.HexColor("#f8fafc")]),
+            ("TEXTCOLOR",     (0, 1), (-1, -1), colors.HexColor("#1e293b")),
+            ("BOX",           (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+            ("INNERGRID",     (0, 0), (-1, -1), 0.25, colors.HexColor("#e2e8f0")),
+            ("TOPPADDING",    (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ("LEFTPADDING",   (0, 0), (-1, -1), 5),
+        ]))
+        elements.append(repo_table)
+
+        # Footer
+        elements.append(Spacer(1, 0.5*cm))
+        elements.append(HRFlowable(width="100%", thickness=0.5, color=muted))
+        elements.append(Paragraph(
+            "Generated by PRETO — Open-source OSINT Intelligence Platform",
+            ParagraphStyle("footer", parent=styles["Normal"], fontSize=7, textColor=muted)
+        ))
+
+        doc.build(elements)
+        return buf.getvalue()
+
+    except ImportError:
+        raise RuntimeError("reportlab not installed. Run: pip install reportlab")
 
 
 class AdvancedFeaturesManager:
@@ -28,13 +167,15 @@ class AdvancedFeaturesManager:
         
         Args:
             repositories: List of repositories to export
-            format: Export format (json, csv)
+            format: Export format (json, csv, pdf)
         
         Returns:
-            Exported data as string
+            Exported data as string (or bytes for pdf)
         """
         if format == "csv":
             return AdvancedFeaturesManager._export_csv(repositories)
+        elif format == "pdf":
+            return _generate_pdf_report(repositories)  # returns bytes
         else:  # json
             return json.dumps(repositories, indent=2, default=str)
     
