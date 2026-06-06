@@ -9,6 +9,7 @@ Last Updated: June 5, 2026
 
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, Index
 from datetime import datetime
+import secrets
 import logging
 
 from .database import Base
@@ -92,9 +93,54 @@ class UserSearchHistory(Base):
         return f"<UserSearchHistory(user_id={self.user_id}, query='{self.query}')>"
 
 
+class APIKey(Base):
+    """API Key model - allows programmatic access without user/pass."""
+    
+    __tablename__ = "api_keys"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=False, index=True)
+    name = Column(String(100), nullable=False)  # e.g., "My Script", "Production App"
+    key_hash = Column(String(255), nullable=False, unique=True, index=True)
+    prefix = Column(String(20), nullable=False, index=True)  # First 8 chars for display
+    
+    # Permissions
+    rate_limit = Column(Integer, default=100)  # Requests per minute
+    is_active = Column(Boolean, default=True, index=True)
+    
+    # Metadata
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    last_used = Column(DateTime, nullable=True)
+    expires_at = Column(DateTime, nullable=True)
+    
+    __table_args__ = (
+        Index('idx_user_api_keys', 'user_id', 'is_active'),
+    )
+    
+    @staticmethod
+    def generate_key() -> str:
+        """Generate a new API key."""
+        return f"pto_{secrets.token_urlsafe(32)}"
+    
+    @staticmethod
+    def hash_key(key: str) -> str:
+        """Hash an API key for storage."""
+        import hashlib
+        return hashlib.sha256(key.encode()).hexdigest()
+    
+    @staticmethod
+    def get_prefix(key: str) -> str:
+        """Get the prefix of an API key for display."""
+        return key[:12]
+    
+    def __repr__(self):
+        return f"<APIKey(name='{self.name}', prefix='{self.prefix}')>"
+
+
 # Export models
 __all__ = [
     'User',
     'SavedSearch',
-    'UserSearchHistory'
+    'UserSearchHistory',
+    'APIKey'
 ]

@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  # Production deployment with PostgreSQL + Redis
+  preto:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: preto-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://preto:preto123@db:5432/preto
+      - REDIS_URL=redis://redis:6379/0
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - NIM_API_KEY=${NIM_API_KEY}
+      - NIM_API_URL=${NIM_API_URL:-https://integrate.api.nvidia.com/v1}
+      - NIM_MODEL=${NIM_MODEL:-meta/llama-3.1-70b-instruct}
+      - MAX_REQUESTS_PER_MINUTE=${MAX_REQUESTS_PER_MINUTE:-40}
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - DEBUG_MODE=false
+      - POSTGRES_POOL_SIZE=10
+      - POSTGRES_MAX_OVERFLOW=20
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - preto-network
+
+  # PostgreSQL database
+  db:
+    image: postgres:15-alpine
+    container_name: preto-db
+    environment:
+      - POSTGRES_USER=preto
+      - POSTGRES_PASSWORD=preto123
+      - POSTGRES_DB=preto
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U preto -d preto"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - preto-network
+
+  # Redis cache
+  redis:
+    image: redis:7-alpine
+    container_name: preto-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - preto-network
+
+  # Nginx reverse proxy (optional)
+  nginx:
+    image: nginx:alpine
+    container_name: preto-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - preto
+    restart: unless-stopped
+    networks:
+      - preto-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  preto-network:
+    driver: bridge

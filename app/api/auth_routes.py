@@ -16,6 +16,7 @@ from .auth import (
     create_user,
     authenticate_user,
     get_current_user,
+    get_authenticated_user,
     create_access_token,
     create_refresh_token,
     verify_token,
@@ -28,6 +29,8 @@ from .auth import (
     log_search_history,
     get_user_search_history,
     clear_search_history,
+    get_user_api_keys,
+    get_user_rate_limit_status,
     ACCESS_TOKEN_EXPIRE_MINUTES,
 )
 from .auth_schemas import (
@@ -431,3 +434,152 @@ async def clear_history(
 ):
     """Clear user's search history."""
     clear_search_history(db, current_user.id)
+# ============================================================================
+# API Key Management Endpoints (Phase 4)
+# ============================================================================
+
+@router.post("/api-keys", status_code=status.HTTP_201_CREATED)
+async def create_api_key_endpoint(
+    name: str,
+    rate_limit: int = 100,
+    days_until_expiry: int = None,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Create a new API key for programmatic access.
+    
+    Returns the raw API key ONCE - you must save it!
+    """
+    from app.api.auth import create_api_key
+    
+    api_key_obj, raw_key = create_api_key(
+        db,
+        user_id=current_user.id,
+        name=name,
+        rate_limit=rate_limit,
+        days_until_expiry=days_until_expiry
+    )
+    
+    logger.info(f"API key created: user={current_user.username}, name='{name}'")
+    
+    return {
+        "id": api_key_obj.id,
+        "name": api_key_obj.name,
+        "prefix": api_key_obj.prefix,
+        "rate_limit": api_key_obj.rate_limit,
+        "is_active": api_key_obj.is_active,
+        "created_at": api_key_obj.created_at,
+        "expires_at": api_key_obj.expires_at,
+        "raw_key": raw_key,  # Only returned ONCE!
+        "warning": "Save this key now - you won't see it again!"
+    }
+
+
+@router.get("/api-keys")
+async def list_api_keys(
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """List all your API keys (without raw keys)."""
+    from app.api.auth import get_user_api_keys
+    
+    keys = get_user_api_keys(db, current_user.id)
+    
+    return {
+        "total": len(keys),
+        "keys": [
+            {
+                "id": k.id,
+                "name": k.name,
+                "prefix": k.prefix,
+                "rate_limit": k.rate_limit,
+                "is_active": k.is_active,
+                "created_at": k.created_at,
+                "last_used": k.last_used,
+                "expires_at": k.expires_at
+            }
+            for k in keys
+        ]
+    }
+
+
+@router.delete("/api-keys/{key_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_api_key_endpoint(
+    key_id: int,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete an API key."""
+    from app.api.auth import delete_api_key
+    
+    success = delete_api_key(db, key_id, current_user.id)
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="API key not found"
+        )
+
+
+@router.post("/api-keys/{key_id}/toggle")
+async def toggle_api_key_endpoint(
+    key_id: int,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Toggle an API key active/inactive."""
+    from app.api.auth import toggle_api_key
+    
+    api_key = toggle_api_key(db, key_id, current_user.id)
+    
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="API key not found"
+        )
+    
+    return {
+        "id": api_key.id,
+        "name": api_key.name,
+        "is_active": api_key.is_active,
+        "message": f"API key {'activated' if api_key.is_active else 'deactivated'}"
+    }
+
+
+# Test endpoint to verify API key authentication works
+@router.get("/verify-auth")
+async def verify_auth(
+    current_user = Depends(get_authenticated_user)
+):
+    """Test endpoint - verify your authentication works (supports Bearer token or API key)."""
+    return {
+        "authenticated": True,
+        "username": current_user.username,
+        "email": current_user.email,
+        "is_admin": current_user.is_admin
+    }
+# ============================================================================
+# Rate Limit Endpoints (Phase 4)
+# ============================================================================
+
+@router.get("/rate_limit")
+async def get_rate_limit(
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get current rate limit status for your account."""
+    # Get user's API key rate limit if they have one
+    user_api_keys = get_user_api_keys(db, current_user.id)
+    rate_limit = user_api_keys[0].rate_limit if user_api_keys else 100
+    
+    status = get_user_rate_limit_status(current_user.id, rate_limit)
+    
+    return {
+        "user_id": current_user.id,
+        "username": current_user.username,
+        "rate_limit": rate_limit,
+        "requests_remaining": status["remaining"],
+        "requests_used": status["used"],
+        "window_seconds": status["window_seconds"]
+    }

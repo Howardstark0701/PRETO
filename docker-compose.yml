@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  preto:
+    build: .
+    container_name: preto-api
+    ports:
+      - "8000:8000"
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - NIM_API_KEY=${NIM_API_KEY}
+      - NIM_API_URL=${NIM_API_URL:-https://integrate.api.nvidia.com/v1}
+      - NIM_MODEL=${NIM_MODEL:-meta/llama-3.1-70b-instruct}
+      - MAX_REQUESTS_PER_MINUTE=${MAX_REQUESTS_PER_MINUTE:-40}
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - DEBUG_MODE=${DEBUG_MODE:-false}
+      - DATABASE_URL=sqlite:///./preto.db
+    volumes:
+      - ./preto.db:/app/preto.db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - preto-network
+
+networks:
+  preto-network:
+    driver: bridge

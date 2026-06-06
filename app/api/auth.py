@@ -16,6 +16,7 @@ import json
 import base64
 import hmac
 import hashlib
+import bcrypt  # Phase 4: Production security upgrade
 
 from app.models import SessionLocal
 
@@ -43,17 +44,28 @@ async def extract_bearer_token(authorization: Optional[str] = Header(None)) -> s
 
 
 # ============================================================================
-# Password Utilities (Simple SHA256 - upgrade to bcrypt in production)
+# Password Utilities (bcrypt - Phase 4 Production Security)
 # ============================================================================
 
 def hash_password(password: str) -> str:
-    """Hash password using SHA256."""
-    return hashlib.sha256((password + SECRET_KEY).encode()).hexdigest()
+    """Hash password using bcrypt (Phase 4 upgrade from SHA256)."""
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify password against hash."""
-    return hash_password(plain_password) == hashed_password
+    """Verify password against bcrypt hash."""
+    try:
+        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    except Exception:
+        # Fallback for legacy SHA256 hashes (for migration period)
+        legacy_hash = hashlib.sha256((plain_password + SECRET_KEY).encode()).hexdigest()
+        if legacy_hash == hashed_password:
+            # Auto-migrate: rehash with bcrypt on successful login
+            logger.info(f"Legacy SHA256 password found, migrating to bcrypt")
+            return True
+        return False
 
 
 # ============================================================================
@@ -272,6 +284,13 @@ def authenticate_user(db: Session, username: str, password: str) -> Optional['Us
         logger.warning(f"Authentication failed: invalid password for user: {username}")
         return None
     
+    # Phase 4: Auto-migrate legacy SHA256 passwords to bcrypt
+    if user.hashed_password.startswith(hashlib.sha256((password + SECRET_KEY).encode()).hexdigest()[:10]):
+        logger.info(f"Migrating legacy password to bcrypt for user: {username}")
+        user.hashed_password = hash_password(password)
+        db.commit()
+        db.refresh(user)
+    
     logger.info(f"User authenticated: {username}")
     return user
 
@@ -410,3 +429,290 @@ def clear_search_history(db: Session, user_id: int) -> int:
     db.commit()
     logger.info(f"Search history cleared: user_id={user_id}, deleted={count}")
     return count
+# ============================================================================
+# API Key Authentication (Phase 4)
+# ============================================================================
+
+def create_api_key(db: Session, user_id: int, name: str, rate_limit: int = 100, days_until_expiry: int = None) -> tuple:
+    """Create a new API key for a user.
+    
+    Returns:
+        tuple: (APIKey object, raw_api_key)
+    """
+    from app.models.auth import APIKey
+    
+    # Generate key
+    raw_key = APIKey.generate_key()
+    key_hash = APIKey.hash_key(raw_key)
+    prefix = APIKey.get_prefix(raw_key)
+    
+    # Set expiration if specified
+    expires_at = None
+    if days_until_expiry:
+        expires_at = datetime.utcnow() + timedelta(days=days_until_expiry)
+    
+    api_key = APIKey(
+        user_id=user_id,
+        name=name,
+        key_hash=key_hash,
+        prefix=prefix,
+        rate_limit=rate_limit,
+        expires_at=expires_at
+    )
+    
+    db.add(api_key)
+    db.commit()
+    db.refresh(api_key)
+    
+    logger.info(f"API key created: user_id={user_id}, name='{name}', prefix='{prefix}'")
+    return api_key, raw_key
+
+
+def verify_api_key(db: Session, raw_key: str) -> Optional['User']:
+    """Verify an API key and return the associated user.
+    
+    Returns:
+        User if valid, None otherwise
+    """
+    from app.models.auth import APIKey
+    
+    if not raw_key or not raw_key.startswith("pto_"):
+        return None
+    
+    key_hash = APIKey.hash_key(raw_key)
+    
+    api_key = db.query(APIKey).filter(APIKey.key_hash == key_hash).first()
+    
+    if not api_key:
+        logger.warning(f"API key verification failed: key not found")
+        return None
+    
+    if not api_key.is_active:
+        logger.warning(f"API key verification failed: key is inactive")
+        return None
+    
+    if api_key.expires_at and api_key.expires_at < datetime.utcnow():
+        logger.warning(f"API key verification failed: key expired")
+        return None
+    
+    # Update last used
+    api_key.last_used = datetime.utcnow()
+    db.commit()
+    
+    # Get associated user
+    from app.models.auth import User
+    user = db.query(User).filter(User.id == api_key.user_id).first()
+    
+    if not user or not user.is_active:
+        logger.warning(f"API key verification failed: user not found or inactive")
+        return None
+    
+    logger.info(f"API key verified: user={user.username}, key_prefix={api_key.prefix}")
+    return user
+
+
+def get_user_api_keys(db: Session, user_id: int):
+    """Get all API keys for a user (without showing the actual keys)."""
+    from app.models.auth import APIKey
+    
+    return db.query(APIKey).filter(APIKey.user_id == user_id).order_by(
+        APIKey.created_at.desc()
+    ).all()
+
+
+def delete_api_key(db: Session, key_id: int, user_id: int) -> bool:
+    """Delete an API key."""
+    from app.models.auth import APIKey
+    
+    api_key = db.query(APIKey).filter(
+        (APIKey.id == key_id) & (APIKey.user_id == user_id)
+    ).first()
+    
+    if not api_key:
+        return False
+    
+    db.delete(api_key)
+    db.commit()
+    
+    logger.info(f"API key deleted: id={key_id}")
+    return True
+
+
+def toggle_api_key(db: Session, key_id: int, user_id: int) -> Optional['APIKey']:
+    """Toggle an API key active/inactive."""
+    from app.models.auth import APIKey
+    
+    api_key = db.query(APIKey).filter(
+        (APIKey.id == key_id) & (APIKey.user_id == user_id)
+    ).first()
+    
+    if not api_key:
+        return None
+    
+    api_key.is_active = not api_key.is_active
+    db.commit()
+    db.refresh(api_key)
+    
+    logger.info(f"API key toggled: id={key_id}, is_active={api_key.is_active}")
+    return api_key
+
+
+async def get_api_key_user(
+    api_key: Optional[str] = Header(None, alias="X-API-Key"),
+    db: Session = Depends(get_db)
+):
+    """Dependency to get user from API key header.
+    
+    Usage: Add this as a dependency to protected endpoints.
+    """
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing X-API-Key header"
+        )
+    
+    user = verify_api_key(db, api_key)
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired API key"
+        )
+    
+    return user
+
+
+# Combined authentication - accepts either Bearer token or API key
+async def get_authenticated_user(
+    authorization: Optional[str] = Header(None, alias="Authorization"),
+    api_key: Optional[str] = Header(None, alias="X-API-Key"),
+    db: Session = Depends(get_db)
+):
+    """Dependency that accepts either JWT Bearer token or API key."""
+    
+    # Try API key first
+    if api_key:
+        user = verify_api_key(db, api_key)
+        if user:
+            return user
+    
+    # Try Bearer token
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization[7:]
+        try:
+            payload = verify_token(token)
+            username = payload.get("sub")
+            
+            from app.models.auth import User
+            user = db.query(User).filter(User.username == username).first()
+            
+            if user and user.is_active:
+                return user
+        except Exception:
+            pass
+    
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Authentication required"
+    )
+# ============================================================================
+# Per-User Rate Limiting (Phase 4)
+# ============================================================================
+
+from collections import defaultdict
+from datetime import datetime, timedelta
+import threading
+
+class UserRateLimiter:
+    """In-memory rate limiter per user."""
+    
+    def __init__(self, default_limit: int = 100):
+        self.default_limit = default_limit
+        self.requests = defaultdict(list)  # user_id -> list of timestamps
+        self.lock = threading.Lock()
+    
+    def is_allowed(self, user_id: int, limit: int = None) -> tuple:
+        """Check if request is allowed for user.
+        
+        Returns:
+            tuple: (allowed: bool, remaining: int, reset_seconds: int)
+        """
+        limit = limit or self.default_limit
+        now = datetime.utcnow()
+        window_start = now - timedelta(minutes=1)
+        
+        with self.lock:
+            # Clean old requests outside the window
+            self.requests[user_id] = [
+                ts for ts in self.requests[user_id] 
+                if ts > window_start
+            ]
+            
+            # Check if limit exceeded
+            if len(self.requests[user_id]) >= limit:
+                # Calculate reset time
+                oldest = min(self.requests[user_id])
+                reset_seconds = int((oldest + timedelta(minutes=1) - now).total_seconds())
+                return False, 0, max(1, reset_seconds)
+            
+            # Add current request
+            self.requests[user_id].append(now)
+            
+            remaining = limit - len(self.requests[user_id])
+            return True, remaining, 60
+    
+    def get_remaining(self, user_id: int, limit: int = None) -> int:
+        """Get remaining requests for user in current window."""
+        limit = limit or self.default_limit
+        now = datetime.utcnow()
+        window_start = now - timedelta(minutes=1)
+        
+        with self.lock:
+            self.requests[user_id] = [
+                ts for ts in self.requests[user_id] 
+                if ts > window_start
+            ]
+            return max(0, limit - len(self.requests[user_id]))
+    
+    def reset(self, user_id: int):
+        """Reset rate limit for user."""
+        with self.lock:
+            if user_id in self.requests:
+                del self.requests[user_id]
+
+
+# Global rate limiter instance
+user_rate_limiter = UserRateLimiter(default_limit=100)
+
+
+def check_user_rate_limit(user_id: int, rate_limit: int = None) -> dict:
+    """Check rate limit for a user.
+    
+    Returns dict with:
+        - allowed: bool
+        - remaining: int
+        - reset_in_seconds: int
+        - limit: int
+    """
+    allowed, remaining, reset_seconds = user_rate_limiter.is_allowed(user_id, rate_limit)
+    limit = rate_limit or user_rate_limiter.default_limit
+    
+    return {
+        "allowed": allowed,
+        "remaining": remaining,
+        "reset_in_seconds": reset_seconds,
+        "limit": limit
+    }
+
+
+def get_user_rate_limit_status(user_id: int, rate_limit: int = None) -> dict:
+    """Get current rate limit status for a user without making a request."""
+    limit = rate_limit or user_rate_limiter.default_limit
+    remaining = user_rate_limiter.get_remaining(user_id, rate_limit)
+    
+    return {
+        "limit": limit,
+        "remaining": remaining,
+        "used": limit - remaining,
+        "window_seconds": 60
+    }

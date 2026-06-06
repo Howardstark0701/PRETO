@@ -2,24 +2,30 @@
 Caching layer for API responses
 
 Phase 2.2: Caching
+Phase 5: Redis support added for production
 
 Author: TANGO
-Last Updated: June 5, 2026
+Last Updated: June 6, 2026
 """
 
 import json
 import hashlib
+import os
 from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger(__name__)
 
+# Cache backend configuration (Phase 5)
+REDIS_URL = os.getenv("REDIS_URL", None)  # Set for Redis, None for in-memory
+_cache_backend = None  # Will be set to 'redis' or 'memory'
+
 
 class CacheManager:
-    """Manages API response caching."""
+    """Manages API response caching with Redis or in-memory backend."""
     
-    # In-memory cache for fast access
+    # In-memory cache for fast access (development)
     _memory_cache: Dict[str, Dict[str, Any]] = {}
     
     # Default TTL values (minutes)
@@ -48,17 +54,24 @@ class CacheManager:
         """Get value from cache."""
         cache_key = CacheManager.generate_cache_key(cache_type, **params)
         
-        # Check memory cache first
+        if REDIS_URL:
+            # Use Redis backend
+            return CacheManager._get_redis(cache_key)
+        else:
+            # Use in-memory backend
+            return CacheManager._get_memory(cache_key)
+    
+    @staticmethod
+    def _get_memory(cache_key: str) -> Optional[Any]:
+        """Get from in-memory cache."""
         if cache_key in CacheManager._memory_cache:
             cache_entry = CacheManager._memory_cache[cache_key]
             
-            # Check if expired
             if datetime.utcnow() < cache_entry['expires_at']:
                 logger.info(f"Cache HIT: {cache_key}")
                 cache_entry['hits'] += 1
                 return cache_entry['data']
             else:
-                # Expired, remove from cache
                 logger.info(f"Cache EXPIRED: {cache_key}")
                 del CacheManager._memory_cache[cache_key]
         
@@ -66,11 +79,35 @@ class CacheManager:
         return None
     
     @staticmethod
+    def _get_redis(cache_key: str) -> Optional[Any]:
+        """Get from Redis cache."""
+        try:
+            import redis
+            r = redis.from_url(REDIS_URL)
+            data = r.get(cache_key)
+            if data:
+                logger.info(f"Cache HIT (Redis): {cache_key}")
+                return json.loads(data)
+            logger.info(f"Cache MISS (Redis): {cache_key}")
+            return None
+        except Exception as e:
+            logger.warning(f"Redis error, falling back to memory: {e}")
+            return CacheManager._get_memory(cache_key)
+    
+    @staticmethod
     def set(cache_type: str, data: Any, **params) -> None:
         """Set value in cache."""
         cache_key = CacheManager.generate_cache_key(cache_type, **params)
         ttl = CacheManager.CACHE_TTL.get(cache_type, 60)
         
+        if REDIS_URL:
+            CacheManager._set_redis(cache_key, data, ttl)
+        else:
+            CacheManager._set_memory(cache_key, data, ttl)
+    
+    @staticmethod
+    def _set_memory(cache_key: str, data: Any, ttl: int) -> None:
+        """Set in-memory cache."""
         expires_at = datetime.utcnow() + timedelta(minutes=ttl)
         
         CacheManager._memory_cache[cache_key] = {
@@ -84,49 +121,118 @@ class CacheManager:
         logger.info(f"Cache SET: {cache_key} (TTL: {ttl}m)")
     
     @staticmethod
+    def _set_redis(cache_key: str, data: Any, ttl: int) -> None:
+        """Set Redis cache."""
+        try:
+            import redis
+            r = redis.from_url(REDIS_URL)
+            r.setex(cache_key, ttl * 60, json.dumps(data))
+            logger.info(f"Cache SET (Redis): {cache_key} (TTL: {ttl}m)")
+        except Exception as e:
+            logger.warning(f"Redis error, falling back to memory: {e}")
+            CacheManager._set_memory(cache_key, data, ttl)
+    
+    @staticmethod
     def invalidate(cache_type: str, **params) -> bool:
         """Invalidate specific cache entry."""
         cache_key = CacheManager.generate_cache_key(cache_type, **params)
         
+        if REDIS_URL:
+            return CacheManager._invalidate_redis(cache_key)
+        else:
+            return CacheManager._invalidate_memory(cache_key)
+    
+    @staticmethod
+    def _invalidate_memory(cache_key: str) -> bool:
+        """Invalidate in-memory cache."""
         if cache_key in CacheManager._memory_cache:
             del CacheManager._memory_cache[cache_key]
             logger.info(f"Cache INVALIDATED: {cache_key}")
             return True
-        
         return False
+    
+    @staticmethod
+    def _invalidate_redis(cache_key: str) -> bool:
+        """Invalidate Redis cache."""
+        try:
+            import redis
+            r = redis.from_url(REDIS_URL)
+            result = r.delete(cache_key)
+            logger.info(f"Cache INVALIDATED (Redis): {cache_key}")
+            return bool(result)
+        except Exception as e:
+            logger.warning(f"Redis error: {e}")
+            return False
     
     @staticmethod
     def invalidate_pattern(cache_type: str) -> int:
         """Invalidate all cache entries of a type."""
         prefix = f"{cache_type}:"
+        
+        if REDIS_URL:
+            return CacheManager._invalidate_pattern_redis(prefix)
+        else:
+            return CacheManager._invalidate_pattern_memory(prefix)
+    
+    @staticmethod
+    def _invalidate_pattern_memory(prefix: str) -> int:
+        """Invalidate pattern in memory."""
         keys_to_remove = [k for k in CacheManager._memory_cache.keys() if k.startswith(prefix)]
         
         for key in keys_to_remove:
             del CacheManager._memory_cache[key]
         
-        logger.info(f"Cache INVALIDATED {len(keys_to_remove)} entries of type: {cache_type}")
+        logger.info(f"Cache INVALIDATED {len(keys_to_remove)} entries of type: {prefix}")
         return len(keys_to_remove)
+    
+    @staticmethod
+    def _invalidate_pattern_redis(prefix: str) -> int:
+        """Invalidate pattern in Redis."""
+        try:
+            import redis
+            r = redis.from_url(REDIS_URL)
+            keys = r.keys(f"{prefix}*")
+            if keys:
+                r.delete(*keys)
+                logger.info(f"Cache INVALIDATED (Redis): {len(keys)} entries")
+                return len(keys)
+            return 0
+        except Exception as e:
+            logger.warning(f"Redis error: {e}")
+            return 0
     
     @staticmethod
     def clear_expired() -> int:
         """Clear all expired cache entries."""
-        now = datetime.utcnow()
-        expired_keys = [
-            k for k, v in CacheManager._memory_cache.items()
-            if now >= v['expires_at']
-        ]
-        
-        for key in expired_keys:
-            del CacheManager._memory_cache[key]
-        
-        if expired_keys:
-            logger.info(f"Cleared {len(expired_keys)} expired cache entries")
-        
-        return len(expired_keys)
+        if REDIS_URL:
+            # Redis handles expiration automatically
+            return 0
+        else:
+            now = datetime.utcnow()
+            expired_keys = [
+                k for k, v in CacheManager._memory_cache.items()
+                if now >= v['expires_at']
+            ]
+            
+            for key in expired_keys:
+                del CacheManager._memory_cache[key]
+            
+            if expired_keys:
+                logger.info(f"Cleared {len(expired_keys)} expired cache entries")
+            
+            return len(expired_keys)
     
     @staticmethod
     def get_stats() -> Dict:
         """Get cache statistics."""
+        if REDIS_URL:
+            return CacheManager._get_stats_redis()
+        else:
+            return CacheManager._get_stats_memory()
+    
+    @staticmethod
+    def _get_stats_memory() -> Dict:
+        """Get memory cache stats."""
         now = datetime.utcnow()
         active_entries = {
             k: v for k, v in CacheManager._memory_cache.items()
@@ -141,6 +247,7 @@ class CacheManager:
         total_hits = sum(v.get('hits', 0) for v in active_entries.values())
         
         return {
+            'backend': 'memory',
             'active_entries': len(active_entries),
             'expired_entries': len(expired_entries),
             'total_entries': len(CacheManager._memory_cache),
@@ -149,12 +256,48 @@ class CacheManager:
         }
     
     @staticmethod
+    def _get_stats_redis() -> Dict:
+        """Get Redis cache stats."""
+        try:
+            import redis
+            r = redis.from_url(REDIS_URL)
+            info = r.info('stats')
+            db_info = r.info('keyspace')
+            
+            return {
+                'backend': 'redis',
+                'redis_version': info.get('redis_version', 'unknown'),
+                'connected_clients': info.get('connected_clients', 0),
+                'total_keys': db_info.get('db0', {}).get('keys', 0),
+                'memory_used': db_info.get('db0', {}).get('used_memory_human', 'unknown')
+            }
+        except Exception as e:
+            logger.warning(f"Redis error: {e}")
+            return {'backend': 'redis', 'error': str(e)}
+    
+    @staticmethod
     def clear_all() -> int:
         """Clear all cache entries."""
-        count = len(CacheManager._memory_cache)
-        CacheManager._memory_cache.clear()
-        logger.info(f"Cache CLEARED - Removed {count} entries")
-        return count
+        if REDIS_URL:
+            return CacheManager._clear_all_redis()
+        else:
+            count = len(CacheManager._memory_cache)
+            CacheManager._memory_cache.clear()
+            logger.info(f"Cache CLEARED - Removed {count} entries")
+            return count
+    
+    @staticmethod
+    def _clear_all_redis() -> int:
+        """Clear all Redis cache."""
+        try:
+            import redis
+            r = redis.from_url(REDIS_URL)
+            r.flushdb()
+            logger.info("Cache CLEARED (Redis)")
+            return 1
+        except Exception as e:
+            logger.warning(f"Redis error: {e}")
+            return 0
 
 
 # Convenience functions
