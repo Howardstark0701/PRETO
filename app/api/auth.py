@@ -654,6 +654,26 @@ async def get_authenticated_user(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Authentication required"
     )
+
+
+async def enforce_authenticated_rate_limit(
+    current_user = Depends(get_authenticated_user),
+):
+    """Apply per-user rate limiting to authenticated routes."""
+    status_info = check_user_rate_limit(current_user.id)
+
+    if not status_info["allowed"]:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Rate limit exceeded",
+            headers={
+                "X-RateLimit-Limit": str(status_info["limit"]),
+                "X-RateLimit-Remaining": str(status_info["remaining"]),
+                "X-RateLimit-Reset": str(status_info["reset_in_seconds"]),
+            },
+        )
+
+    return current_user
 # ============================================================================
 # Per-User Rate Limiting (Phase 4)
 # ============================================================================

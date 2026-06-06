@@ -15,8 +15,7 @@ import logging
 from .auth import (
     create_user,
     authenticate_user,
-    get_current_user,
-    get_authenticated_user,
+    enforce_authenticated_rate_limit,
     create_access_token,
     create_refresh_token,
     verify_token,
@@ -233,7 +232,7 @@ async def refresh_token(
 
 @router.get("/me", response_model=UserProfile)
 async def get_profile(
-    current_user = Depends(get_current_user)
+    current_user = Depends(enforce_authenticated_rate_limit)
 ):
     """Get current user profile."""
     logger.info(f"Profile accessed: {current_user.username}")
@@ -274,7 +273,7 @@ async def get_user_public_profile(
 @router.post("/saved-searches", response_model=SavedSearchResponse, status_code=status.HTTP_201_CREATED)
 async def create_saved_search_endpoint(
     search_data: SavedSearchCreate,
-    current_user = Depends(get_current_user),
+    current_user = Depends(enforce_authenticated_rate_limit),
     db: Session = Depends(get_db)
 ):
     """
@@ -309,7 +308,7 @@ async def create_saved_search_endpoint(
 
 @router.get("/saved-searches", response_model=SavedSearchList)
 async def list_saved_searches(
-    current_user = Depends(get_current_user),
+    current_user = Depends(enforce_authenticated_rate_limit),
     db: Session = Depends(get_db)
 ):
     """Get user's saved searches."""
@@ -324,7 +323,7 @@ async def list_saved_searches(
 @router.get("/saved-searches/{search_id}", response_model=SavedSearchResponse)
 async def get_saved_search(
     search_id: int,
-    current_user = Depends(get_current_user),
+    current_user = Depends(enforce_authenticated_rate_limit),
     db: Session = Depends(get_db)
 ):
     """Get specific saved search."""
@@ -347,7 +346,7 @@ async def get_saved_search(
 async def update_saved_search(
     search_id: int,
     update_data: SavedSearchUpdate,
-    current_user = Depends(get_current_user),
+    current_user = Depends(enforce_authenticated_rate_limit),
     db: Session = Depends(get_db)
 ):
     """Update saved search."""
@@ -375,7 +374,7 @@ async def update_saved_search(
 @router.delete("/saved-searches/{search_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_saved_search_endpoint(
     search_id: int,
-    current_user = Depends(get_current_user),
+    current_user = Depends(enforce_authenticated_rate_limit),
     db: Session = Depends(get_db)
 ):
     """Delete saved search."""
@@ -391,7 +390,7 @@ async def delete_saved_search_endpoint(
 @router.post("/saved-searches/{search_id}/favorite", response_model=SavedSearchResponse)
 async def toggle_favorite(
     search_id: int,
-    current_user = Depends(get_current_user),
+    current_user = Depends(enforce_authenticated_rate_limit),
     db: Session = Depends(get_db)
 ):
     """Toggle search as favorite."""
@@ -415,7 +414,7 @@ async def toggle_favorite(
 @router.get("/search-history", response_model=SearchHistoryList)
 async def get_history(
     limit: int = 50,
-    current_user = Depends(get_current_user),
+    current_user = Depends(enforce_authenticated_rate_limit),
     db: Session = Depends(get_db)
 ):
     """Get user's search history."""
@@ -429,7 +428,7 @@ async def get_history(
 
 @router.delete("/search-history", status_code=status.HTTP_204_NO_CONTENT)
 async def clear_history(
-    current_user = Depends(get_current_user),
+    current_user = Depends(enforce_authenticated_rate_limit),
     db: Session = Depends(get_db)
 ):
     """Clear user's search history."""
@@ -443,7 +442,7 @@ async def create_api_key_endpoint(
     name: str,
     rate_limit: int = 100,
     days_until_expiry: int = None,
-    current_user = Depends(get_current_user),
+    current_user = Depends(enforce_authenticated_rate_limit),
     db: Session = Depends(get_db)
 ):
     """
@@ -478,7 +477,7 @@ async def create_api_key_endpoint(
 
 @router.get("/api-keys")
 async def list_api_keys(
-    current_user = Depends(get_current_user),
+    current_user = Depends(enforce_authenticated_rate_limit),
     db: Session = Depends(get_db)
 ):
     """List all your API keys (without raw keys)."""
@@ -507,7 +506,7 @@ async def list_api_keys(
 @router.delete("/api-keys/{key_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_api_key_endpoint(
     key_id: int,
-    current_user = Depends(get_current_user),
+    current_user = Depends(enforce_authenticated_rate_limit),
     db: Session = Depends(get_db)
 ):
     """Delete an API key."""
@@ -525,7 +524,7 @@ async def delete_api_key_endpoint(
 @router.post("/api-keys/{key_id}/toggle")
 async def toggle_api_key_endpoint(
     key_id: int,
-    current_user = Depends(get_current_user),
+    current_user = Depends(enforce_authenticated_rate_limit),
     db: Session = Depends(get_db)
 ):
     """Toggle an API key active/inactive."""
@@ -550,7 +549,7 @@ async def toggle_api_key_endpoint(
 # Test endpoint to verify API key authentication works
 @router.get("/verify-auth")
 async def verify_auth(
-    current_user = Depends(get_authenticated_user)
+    current_user = Depends(enforce_authenticated_rate_limit)
 ):
     """Test endpoint - verify your authentication works (supports Bearer token or API key)."""
     return {
@@ -565,7 +564,7 @@ async def verify_auth(
 
 @router.get("/rate_limit")
 async def get_rate_limit(
-    current_user = Depends(get_current_user),
+    current_user = Depends(enforce_authenticated_rate_limit),
     db: Session = Depends(get_db)
 ):
     """Get current rate limit status for your account."""

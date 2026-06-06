@@ -10,7 +10,7 @@ Last Updated: June 5, 2026
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from datetime import datetime
 from typing import Dict, Optional
 from dotenv import load_dotenv
@@ -18,21 +18,21 @@ import os
 import logging
 import asyncio
 
+from app.api.logging_config import configure_logging
 from app.api.routes import router as repos_router
 from app.api.auth_routes import router as auth_router
 from app.api.insights_routes import router as insights_router
 from app.api.advanced_routes import router as advanced_router
+from app.api.dashboard import router as dashboard_router
 from app.models import init_db
 from app.api.scheduler import get_scheduler, init_scheduler, shutdown_scheduler
 from app.api.sync import background_cache_maintenance, background_get_stats
 from app.api.middleware import CombinedMiddleware
+from app.api.metrics import metrics_collector
 
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+configure_logging()
 logger = logging.getLogger(__name__)
 
 # Load environment variables
@@ -76,6 +76,7 @@ app.include_router(repos_router)
 app.include_router(auth_router)
 app.include_router(insights_router)
 app.include_router(advanced_router)
+app.include_router(dashboard_router)
 
 
 # ============================================================================
@@ -201,6 +202,12 @@ async def health_check():
             "error": str(e),
             "timestamp": datetime.utcnow().isoformat()
         }, 500
+
+
+@app.get("/api/metrics", tags=["monitoring"], response_class=PlainTextResponse)
+async def metrics():
+    """Prometheus-compatible request metrics."""
+    return PlainTextResponse(metrics_collector.to_prometheus(), media_type="text/plain")
 
 
 # Welcome endpoint
