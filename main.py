@@ -81,6 +81,71 @@ app.include_router(insights_router)
 app.include_router(advanced_router)
 app.include_router(dashboard_router)
 
+# ============================================================================
+# Health, Metrics & Root (must be BEFORE SPA catch-all)
+# ============================================================================
+
+# Health check endpoint
+@app.get("/api/health", tags=["health"])
+async def health_check():
+    """
+    Simple health check endpoint to verify API is running.
+    
+    Returns:
+        dict: Status and timestamp
+    """
+    try:
+        logger.info("Health check requested")
+        return {
+            "status": "healthy",
+            "message": "PRETO API is running",
+            "version": "0.2.0",
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        return {
+            "status": "unhealthy",
+            "message": "PRETO API encountered an error",
+            "error": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        }, 500
+
+
+@app.get("/api/metrics", tags=["monitoring"], response_class=PlainTextResponse)
+async def metrics():
+    """Prometheus-compatible request metrics."""
+    return PlainTextResponse(metrics_collector.to_prometheus(), media_type="text/plain")
+
+
+# Welcome endpoint
+@app.get("/", tags=["info"])
+async def root():
+    """
+    Welcome endpoint with API information.
+    
+    Returns:
+        dict: Welcome message and API documentation links
+    """
+    try:
+        logger.info("Welcome endpoint accessed")
+        return {
+            "name": "PRETO",
+            "description": "Open-source OSINT and Public Data Analytics Platform",
+            "version": "0.2.0",
+            "docs": "/api/docs",
+            "redoc": "/api/redoc",
+            "health": "/api/health",
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Welcome endpoint error: {str(e)}")
+        return {
+            "error": "Unable to process request",
+            "message": str(e)
+        }, 500
+
+
 # ── Serve React frontend (production) ─────────────────────────────────────
 # In production the frontend dist is built into frontend/dist/
 # We serve it as static files so a single container handles both API + UI.
@@ -194,67 +259,6 @@ async def value_error_handler(request: Request, exc: ValueError):
             "timestamp": datetime.utcnow().isoformat()
         }
     )
-
-
-# Health check endpoint
-@app.get("/api/health", tags=["health"])
-async def health_check():
-    """
-    Simple health check endpoint to verify API is running.
-    
-    Returns:
-        dict: Status and timestamp
-    """
-    try:
-        logger.info("Health check requested")
-        return {
-            "status": "healthy",
-            "message": "PRETO API is running",
-            "version": "0.2.0",
-            "timestamp": datetime.utcnow().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Health check failed: {str(e)}")
-        return {
-            "status": "unhealthy",
-            "message": "PRETO API encountered an error",
-            "error": str(e),
-            "timestamp": datetime.utcnow().isoformat()
-        }, 500
-
-
-@app.get("/api/metrics", tags=["monitoring"], response_class=PlainTextResponse)
-async def metrics():
-    """Prometheus-compatible request metrics."""
-    return PlainTextResponse(metrics_collector.to_prometheus(), media_type="text/plain")
-
-
-# Welcome endpoint
-@app.get("/", tags=["info"])
-async def root():
-    """
-    Welcome endpoint with API information.
-    
-    Returns:
-        dict: Welcome message and API documentation links
-    """
-    try:
-        logger.info("Welcome endpoint accessed")
-        return {
-            "name": "PRETO",
-            "description": "Open-source OSINT and Public Data Analytics Platform",
-            "version": "0.2.0",
-            "docs": "/api/docs",
-            "redoc": "/api/redoc",
-            "health": "/api/health",
-            "timestamp": datetime.utcnow().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Welcome endpoint error: {str(e)}")
-        return {
-            "error": "Unable to process request",
-            "message": str(e)
-        }, 500
 
 
 # Planned REST Endpoints

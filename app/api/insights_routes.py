@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 import logging
 
-from .insights import get_insights_manager
+from .insights import get_insights_manager, ALLOWED_MODELS
 from .insights_schemas import (
     AnalyzeRepositoriesRequest,
     AnalyzeRepositoriesResponse,
@@ -55,7 +55,8 @@ async def analyze_repositories(
         insights_manager = get_insights_manager()
         analysis = await insights_manager.analyze_repositories(
             request.repositories,
-            request.analysis_type
+            request.analysis_type,
+            model=getattr(request, 'model', None) or "meta/llama-3.1-70b-instruct"
         )
         
         logger.info(f"Repository analysis completed: {request.analysis_type}")
@@ -105,7 +106,7 @@ async def natural_language_query(
         insights_manager = get_insights_manager()
         context = request.context or {}
         
-        answer = await insights_manager.query_natural_language(request.query, context)
+        answer = await insights_manager.query_natural_language(request.query, context, model=getattr(request, 'model', None) or "meta/llama-3.1-70b-instruct")
         
         logger.info(f"Natural language query processed")
         
@@ -161,7 +162,8 @@ async def get_search_insights(
         # Get insights from NIM
         insights_text = await insights_manager.query_natural_language(
             prompt,
-            {"search_query": request.search_query}
+            {"search_query": request.search_query},
+            model=request.model
         )
         
         # Extract key findings (simple split by numbered list)
@@ -240,7 +242,7 @@ async def analyze_user_profile(
             f"Format as: Expertise areas: [list], Contribution style: [description]"
         )
         
-        analysis = await insights_manager.query_natural_language(prompt, context)
+        analysis = await insights_manager.query_natural_language(prompt, context, model=request.model)
         
         # Parse expertise areas from response
         expertise_areas = []
@@ -287,6 +289,18 @@ async def analyze_user_profile(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"User analysis failed: {str(e)}"
         )
+
+
+@router.get("/models")
+async def get_available_models():
+    """List available AI models for selection."""
+    return {
+        "models": [
+            {"id": k, "label": v, "default": k == "meta/llama-3.1-70b-instruct"}
+            for k, v in ALLOWED_MODELS.items()
+        ],
+        "default": "meta/llama-3.1-70b-instruct"
+    }
 
 
 @router.get("/health")

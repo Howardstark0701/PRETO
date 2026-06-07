@@ -21,6 +21,13 @@ NIM_API_KEY = os.getenv("NIM_API_KEY", "")
 NIM_API_URL = os.getenv("NIM_API_URL", "https://integrate.api.nvidia.com/v1")
 NIM_MODEL = os.getenv("NIM_MODEL", "meta/llama-3.1-70b-instruct")
 
+ALLOWED_MODELS = {
+    "meta/llama-3.1-70b-instruct": "Llama 3.1 70B (Default)",
+    "meta/llama-3.1-8b-instruct": "Llama 3.1 8B (Fast)",
+    "mistralai/mixtral-8x22b-instruct-v0.1": "Mixtral 8x22B",
+    "nvidia/nemotron-4-340b-instruct": "Nemotron 4 340B (Deep)",
+}
+
 # Rate Limiting: 40 requests per minute
 MAX_REQUESTS_PER_MINUTE = int(os.getenv("MAX_REQUESTS_PER_MINUTE", "40"))
 REQUEST_WINDOW_SECONDS = 60
@@ -87,7 +94,7 @@ class NIMInsights:
             )
             logger.info(f"NVIDIA NIM initialized. Rate limit: {MAX_REQUESTS_PER_MINUTE} req/min")
     
-    async def analyze_repositories(self, repositories: List[Dict], analysis_type: str = "general") -> str:
+    async def analyze_repositories(self, repositories: List[Dict], analysis_type: str = "general", model: str = NIM_MODEL) -> str:
         """
         Analyze a list of repositories using NVIDIA NIM.
         
@@ -112,7 +119,7 @@ class NIMInsights:
             prompt = self._create_analysis_prompt(repo_summary, analysis_type)
             
             # Call NIM API
-            response = await self._call_nim(prompt)
+            response = await self._call_nim(prompt, model=model)
             
             logger.info(f"Repository analysis completed: {analysis_type} | Rate limit: {self.rate_limiter.get_stats()}")
             return response
@@ -121,7 +128,7 @@ class NIMInsights:
             logger.error(f"Error analyzing repositories: {str(e)}")
             return self._get_fallback_analysis(repositories, analysis_type)
     
-    async def query_natural_language(self, query: str, context_data: Dict) -> str:
+    async def query_natural_language(self, query: str, context_data: Dict, model: str = NIM_MODEL) -> str:
         """
         Process natural language query about OSINT data.
         
@@ -140,7 +147,7 @@ class NIMInsights:
             await self.rate_limiter.wait_if_needed()
             
             prompt = self._create_query_prompt(query, context_data)
-            response = await self._call_nim(prompt)
+            response = await self._call_nim(prompt, model=model)
             
             logger.info(f"Natural language query processed | Rate limit: {self.rate_limiter.get_stats()}")
             return response
@@ -212,7 +219,7 @@ class NIMInsights:
             f"Provide a clear, concise answer based on the provided data."
         )
     
-    async def _call_nim(self, prompt: str) -> str:
+    async def _call_nim(self, prompt: str, model: str = NIM_MODEL) -> str:
         """Call NVIDIA NIM API."""
         if not self.client:
             raise ValueError("NIM client not initialized")
@@ -221,7 +228,7 @@ class NIMInsights:
             response = self.client.post(
                 f"{NIM_API_URL}/chat/completions",
                 json={
-                    "model": NIM_MODEL,
+                    "model": model,
                     "messages": [
                         {
                             "role": "user",

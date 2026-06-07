@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react'
-import { Brain, Zap, MessageSquare, Search } from 'lucide-react'
+import { Brain, MessageSquare } from 'lucide-react'
 import { insights } from '../api'
+
+const DEFAULT_MODEL = "meta/llama-3.1-70b-instruct"
 
 export default function InsightsPage() {
   const [tab, setTab]           = useState('query')
   const [health, setHealth]     = useState(null)
+  const [models, setModels]     = useState([])
+  const [model, setModel]       = useState(() => localStorage.getItem('preto-ai-model') || DEFAULT_MODEL)
   const [query, setQuery]       = useState('')
   const [answer, setAnswer]     = useState('')
   const [loading, setLoading]   = useState(false)
@@ -17,13 +21,18 @@ export default function InsightsPage() {
     insights.health()
       .then(setHealth)
       .catch(() => setHealth({ status: 'unreachable' }))
+    insights.models()
+      .then(d => { setModels(d.models); if (!d.models.some(m => m.id === model)) setModel(d.default) })
+      .catch(() => {})
   }, [])
+
+  useEffect(() => { localStorage.setItem('preto-ai-model', model) }, [model])
 
   async function doQuery() {
     if (!query.trim()) return
     setLoading(true); setAnswer(''); setError(null)
     try {
-      const data = await insights.query({ query })
+      const data = await insights.query({ query, model })
       setAnswer(data.answer)
     } catch (e) { setError(e.message) }
     finally { setLoading(false) }
@@ -33,7 +42,7 @@ export default function InsightsPage() {
     setLoading(true); setAnalysisResult(null); setError(null)
     try {
       const repoList = JSON.parse(analyzeJson)
-      const data = await insights.analyze({ repositories: repoList, analysis_type: analysisType })
+      const data = await insights.analyze({ repositories: repoList, analysis_type: analysisType, model })
       setAnalysisResult(data)
     } catch (e) { setError(e.message) }
     finally { setLoading(false) }
@@ -62,6 +71,18 @@ export default function InsightsPage() {
             <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
               Rate limit: {health.rate_limit.available_slots}/{health.rate_limit_per_minute} slots available
             </span>
+          )}
+          {models.length > 0 && (
+            <select
+              className="form-select"
+              style={{ width: 'auto', marginLeft: 'auto', fontSize: 11 }}
+              value={model}
+              onChange={e => setModel(e.target.value)}
+            >
+              {models.map(m => (
+                <option key={m.id} value={m.id}>{m.label}</option>
+              ))}
+            </select>
           )}
           {!nimOk && (
             <span className="badge badge-yellow">Set NIM_API_KEY in .env to enable AI</span>
@@ -96,13 +117,28 @@ export default function InsightsPage() {
           {answer && (
             <div style={{ marginTop: 16 }}>
               <div className="panel-title">RESPONSE</div>
-              <div style={{ fontSize: 12, color: 'var(--text-dim)', lineHeight: 1.8, whiteSpace: 'pre-wrap', background: 'var(--bg-card)', padding: 14, borderRadius: 6, border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 12, color: 'var(--text-dim)', lineHeight: 1.8, whiteSpace: 'pre-wrap', background: 'var(--bg-card)', padding: 14, border: '1px solid var(--border)' }}>
                 {answer}
               </div>
             </div>
           )}
 
-          {loading && <div className="loading" style={{ marginTop: 12 }}><div className="spinner" /> Waiting for NIM response...</div>}
+          {loading && (
+            <div style={{ marginTop: 16 }}>
+              <div className="skeleton skeleton-title" />
+              <div className="skeleton skeleton-line" /><div className="skeleton skeleton-line" /><div className="skeleton skeleton-line" style={{ width: '70%' }} />
+            </div>
+          )}
+
+          {!answer && !loading && !error && (
+            <div className="empty-state" style={{ marginTop: 8 }}>
+              <Brain size={32} style={{ marginBottom: 8, opacity: 0.3 }} />
+              <div>Ask a question about your OSINT data or repositories</div>
+              <div style={{ fontSize: 10, marginTop: 6, color: 'var(--text-muted)' }}>
+                e.g. "What are the most popular Python OSINT tools?"
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -121,8 +157,8 @@ export default function InsightsPage() {
           <div className="form-group" style={{ marginBottom: 12 }}>
             <label className="form-label">Repositories JSON (array)</label>
             <textarea
-              className="form-input code-block"
-              style={{ minWidth: 'unset', width: '100%', height: 120, resize: 'vertical', background: 'var(--bg-base)' }}
+              className="form-input"
+              style={{ minWidth: 'unset', width: '100%', height: 120, resize: 'vertical', background: 'var(--bg-base)', fontFamily: 'var(--font-mono)', fontSize: 12 }}
               value={analyzeJson}
               onChange={e => setAnalyzeJson(e.target.value)}
               placeholder='[{"name": "repo", "description": "...", "stargazers_count": 100}]'
@@ -138,6 +174,23 @@ export default function InsightsPage() {
             <div style={{ marginTop: 16 }}>
               <div className="panel-title">ANALYSIS RESULT</div>
               <div className="code-block">{JSON.stringify(analysisResult, null, 2)}</div>
+            </div>
+          )}
+
+          {loading && (
+            <div style={{ marginTop: 16 }}>
+              <div className="skeleton skeleton-title" />
+              <div className="skeleton skeleton-line" /><div className="skeleton skeleton-line" /><div className="skeleton skeleton-line" style={{ width: '60%' }} />
+            </div>
+          )}
+
+          {!analysisResult && !loading && !error && (
+            <div className="empty-state" style={{ marginTop: 8 }}>
+              <Brain size={32} style={{ marginBottom: 8, opacity: 0.3 }} />
+              <div>Paste repository JSON and run analysis</div>
+              <div style={{ fontSize: 10, marginTop: 6, color: 'var(--text-muted)' }}>
+                Analysis types: General, Security, Trends, Contributors
+              </div>
             </div>
           )}
         </div>

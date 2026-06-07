@@ -16,6 +16,10 @@ class AnalyzeRepositoriesRequest(BaseModel):
         default="general",
         description="Type of analysis: general, security, trending, quality"
     )
+    model: str = Field(
+        default="meta/llama-3.1-70b-instruct",
+        description="AI model to use for analysis"
+    )
     
     class Config:
         schema_extra = {
@@ -56,6 +60,10 @@ class NaturalLanguageQueryRequest(BaseModel):
     """Request for natural language query."""
     query: str = Field(..., min_length=1, description="Natural language question")
     context: Optional[Dict] = Field(None, description="Optional context data")
+    model: str = Field(
+        default="meta/llama-3.1-70b-instruct",
+        description="AI model to use"
+    )
     
     class Config:
         schema_extra = {
@@ -91,6 +99,7 @@ class SearchInsightRequest(BaseModel):
     """Request for search insights."""
     search_query: str = Field(..., description="Search query")
     results: List[Dict] = Field(..., description="Search results")
+    model: str = Field(default="meta/llama-3.1-70b-instruct", description="AI model")
     
     class Config:
         schema_extra = {
@@ -126,6 +135,7 @@ class UserAnalysisRequest(BaseModel):
     username: str = Field(..., description="GitHub username")
     repositories: List[Dict] = Field(..., description="User's repositories")
     statistics: Optional[Dict] = Field(None, description="User statistics")
+    model: str = Field(default="meta/llama-3.1-70b-instruct", description="AI model")
     
     class Config:
         schema_extra = {

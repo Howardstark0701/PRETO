@@ -92,6 +92,7 @@ export const apiKeys = {
 // ── Insights (NIM AI) ──────────────────────────────────────────────────────
 export const insights = {
   health:        ()       => get('/insights/health'),
+  models:        ()       => get('/insights/models'),
   analyze:       (data)   => post('/insights/analyze', data),
   query:         (data)   => post('/insights/query', data),
   searchInsights:(data)   => post('/insights/search-insights', data),
@@ -111,6 +112,30 @@ export const advanced = {
   report:          (data)  => post('/advanced/report', data),
   compare:         (data)  => post('/advanced/compare', data),
   searchTrends:    (limit) => get('/advanced/search-trends', { limit }),
+}
+
+// ── Sources (MACH1 — GitLab, Reddit, HN, X, Dev.to) ────────
+export const sources = {
+  gitlab: {
+    userProjects: (username, perPage) => get(`/sources/gitlab/users/${username}/projects`, { per_page: perPage }),
+    search:        (query, perPage)   => get('/sources/gitlab/search', { query, per_page: perPage }),
+  },
+  reddit: {
+    user:        (username)      => get(`/sources/reddit/users/${username}`),
+    submissions: (username, lim) => get(`/sources/reddit/users/${username}/submissions`, { limit: lim }),
+  },
+  hackernews: {
+    user:        (username)      => get(`/sources/hackernews/users/${username}`),
+    submissions: (username, lim) => get(`/sources/hackernews/users/${username}/submissions`, { limit: lim }),
+  },
+  x: {
+    user:   (username)             => get(`/sources/x/users/${username}`),
+    tweets: (username, maxRes)     => get(`/sources/x/users/${username}/tweets`, { max_results: maxRes }),
+  },
+  devto: {
+    user:     (username)          => get(`/sources/devto/users/${username}`),
+    articles: (username, perPage) => get(`/sources/devto/users/${username}/articles`, { per_page: perPage }),
+  },
 }
 
 // ── Misc ────────────────────────────────────────────────────────────────────

@@ -16,6 +16,11 @@ import asyncio
 import logging
 
 from app.scrapers.github_scraper import GitHubScraper
+from app.scrapers.gitlab_scraper import GitLabScraper
+from app.scrapers.reddit_scraper import RedditScraper
+from app.scrapers.hackernews_scraper import HackerNewsScraper
+from app.scrapers.x_scraper import XScraper
+from app.scrapers.devto_scraper import DevToScraper
 from .schemas import (
     UserRepositoriesResponse,
     SearchResultsResponse,
@@ -982,4 +987,185 @@ async def get_repo_contributors(
         raise HTTPException(status_code=504, detail="Request timed out")
     except Exception as e:
         logger.error(f"Contributors error for {owner}/{repo_name}: {e}")
+        raise HTTPException(status_code=502, detail=f"GitHub API error: {str(e)}")
+
+
+# ============================================================================
+# GitLab Endpoints (MACH1 — Phase 4a)
+# ============================================================================
+
+gitlab_scraper = GitLabScraper()
+reddit_scraper = RedditScraper()
+hn_scraper = HackerNewsScraper()
+x_scraper = XScraper()
+devto_scraper = DevToScraper()
+
+
+@router.get(
+    "/sources/gitlab/users/{username}/projects",
+    summary="Get GitLab user projects",
+    tags=["sources"]
+)
+async def get_gitlab_user_projects(username: str, per_page: int = 30):
+    """Fetch public projects for a GitLab user."""
+    try:
+        projects = await gitlab_scraper.get_user_projects(username, per_page)
+        return {"username": username, "source": "gitlab", "projects": projects, "count": len(projects)}
+    except Exception as e:
+        logger.error(f"GitLab error for {username}: {e}")
+        raise HTTPException(status_code=502, detail=f"GitLab API error: {str(e)}")
+
+
+@router.get(
+    "/sources/gitlab/search",
+    summary="Search GitLab projects",
+    tags=["sources"]
+)
+async def search_gitlab_projects(query: str, per_page: int = 30):
+    """Search GitLab projects by query."""
+    try:
+        results = await gitlab_scraper.search_projects(query, per_page)
+        return {"query": query, "source": "gitlab", "results": results, "count": len(results)}
+    except Exception as e:
+        logger.error(f"GitLab search error: {e}")
+        raise HTTPException(status_code=502, detail=f"GitLab search error: {str(e)}")
+
+
+# ============================================================================
+# Reddit Endpoints (MACH1 — Phase 4b)
+# ============================================================================
+
+@router.get(
+    "/sources/reddit/users/{username}",
+    summary="Get Reddit user info",
+    tags=["sources"]
+)
+async def get_reddit_user(username: str):
+    """Fetch Reddit user profile info."""
+    user = await reddit_scraper.get_user_info(username)
+    if not user:
+        raise HTTPException(status_code=404, detail=f"Reddit user {username} not found")
+    return user
+
+
+@router.get(
+    "/sources/reddit/users/{username}/submissions",
+    summary="Get Reddit user submissions",
+    tags=["sources"]
+)
+async def get_reddit_submissions(username: str, limit: int = 25):
+    """Fetch Reddit user's recent submissions."""
+    posts = await reddit_scraper.get_user_submissions(username, limit)
+    return {"username": username, "source": "reddit", "posts": posts, "count": len(posts)}
+
+
+# ============================================================================
+# Hacker News Endpoints (MACH1 — Phase 4b)
+# ============================================================================
+
+@router.get(
+    "/sources/hackernews/users/{username}",
+    summary="Get Hacker News user info",
+    tags=["sources"]
+)
+async def get_hn_user(username: str):
+    """Fetch Hacker News user profile."""
+    user = await hn_scraper.get_user(username)
+    if not user:
+        raise HTTPException(status_code=404, detail=f"HN user {username} not found")
+    return user
+
+
+@router.get(
+    "/sources/hackernews/users/{username}/submissions",
+    summary="Get Hacker News user submissions",
+    tags=["sources"]
+)
+async def get_hn_submissions(username: str, limit: int = 20):
+    """Fetch Hacker News user's recent story submissions."""
+    items = await hn_scraper.get_user_submissions(username, limit)
+    return {"username": username, "source": "hackernews", "submissions": items, "count": len(items)}
+
+
+# ============================================================================
+# X / Twitter Endpoints (MACH1 — Phase 4c)
+# ============================================================================
+
+@router.get(
+    "/sources/x/users/{username}",
+    summary="Get X/Twitter user info",
+    tags=["sources"]
+)
+async def get_x_user(username: str):
+    """Fetch X/Twitter user profile info."""
+    user = await x_scraper.get_user(username)
+    if not user:
+        raise HTTPException(status_code=404, detail=f"X user {username} not found")
+    return user
+
+
+@router.get(
+    "/sources/x/users/{username}/tweets",
+    summary="Get X/Twitter user tweets",
+    tags=["sources"]
+)
+async def get_x_tweets(username: str, max_results: int = 10):
+    """Fetch X/Twitter user's recent tweets."""
+    tweets = await x_scraper.get_tweets(username, max_results)
+    return {"username": username, "source": "x", "tweets": tweets, "count": len(tweets)}
+
+
+# ============================================================================
+# Dev.to Endpoints (MACH1 — Phase 4c)
+# ============================================================================
+
+@router.get(
+    "/sources/devto/users/{username}",
+    summary="Get Dev.to user info",
+    tags=["sources"]
+)
+async def get_devto_user(username: str):
+    """Fetch Dev.to user profile."""
+    user = await devto_scraper.get_user(username)
+    if not user:
+        raise HTTPException(status_code=404, detail=f"Dev.to user {username} not found")
+    return user
+
+
+@router.get(
+    "/sources/devto/users/{username}/articles",
+    summary="Get Dev.to user articles",
+    tags=["sources"]
+)
+async def get_devto_articles(username: str, per_page: int = 20):
+    """Fetch Dev.to user's articles."""
+    articles = await devto_scraper.get_articles(username, per_page)
+    return {"username": username, "source": "devto", "articles": articles, "count": len(articles)}
+
+
+# ============================================================================
+# GitHub Enhancements (MACH1 — Phase 4c)
+# ============================================================================
+
+@router.get(
+    "/repos/trending",
+    summary="Get trending GitHub repositories",
+    description="Fetch trending repos by language and date range",
+    tags=["repositories"]
+)
+async def get_trending_repos(
+    language: str = "",
+    since: str = "weekly",
+    per_page: int = 25,
+):
+    """Fetch trending repositories using GitHub search sorted by stars."""
+    try:
+        q = "stars:>100"
+        if language:
+            q += f" language:{language}"
+        results = await scraper.search_repos(q, per_page=per_page)
+        results.sort(key=lambda r: r.get("stargazers_count", 0), reverse=True)
+        return {"language": language, "since": since, "trending": results, "count": len(results)}
+    except Exception as e:
+        logger.error(f"Trending repos error: {e}")
         raise HTTPException(status_code=502, detail=f"GitHub API error: {str(e)}")

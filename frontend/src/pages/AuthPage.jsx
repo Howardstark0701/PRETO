@@ -145,7 +145,7 @@ export default function AuthPage() {
       {tab === 'saves' && (
         <div className="panel">
           <div className="panel-title"><Bookmark size={11} style={{ display:'inline', marginRight:5 }}/>SAVED SEARCHES</div>
-          {saves === null && <button className="btn btn-secondary" onClick={loadSaves}>Load</button>}
+          {saves === null && <><div className="skeleton skeleton-line" /><div className="skeleton skeleton-line" style={{ width: '60%' }} /></>}
           {saves?.length === 0 && <div className="empty-state">No saved searches yet</div>}
           {saves?.length > 0 && (
             <table className="data-table">
@@ -175,7 +175,7 @@ export default function AuthPage() {
             <div className="panel-title"><History size={11} style={{ display:'inline', marginRight:5 }}/>SEARCH HISTORY</div>
             <button className="btn btn-danger" style={{ fontSize: 10 }} onClick={clearHist}>Clear All</button>
           </div>
-          {hist === null && <button className="btn btn-secondary" onClick={loadHist}>Load</button>}
+          {hist === null && <><div className="skeleton skeleton-line" /><div className="skeleton skeleton-line" style={{ width: '50%' }} /></>}
           {hist?.length === 0 && <div className="empty-state">No history yet</div>}
           {hist?.length > 0 && (
             <table className="data-table">
@@ -199,7 +199,7 @@ export default function AuthPage() {
             <div className="panel-title"><Key size={11} style={{ display:'inline', marginRight:5 }}/>API KEYS</div>
             <button className="btn btn-primary" style={{ fontSize: 10 }} onClick={createKey}>+ New Key</button>
           </div>
-          {keys === null && <button className="btn btn-secondary" onClick={loadKeys}>Load</button>}
+          {keys === null && <><div className="skeleton skeleton-line" /><div className="skeleton skeleton-line" style={{ width: '45%' }} /></>}
           {keys?.length === 0 && <div className="empty-state">No API keys yet</div>}
           {keys?.length > 0 && (
             <table className="data-table">

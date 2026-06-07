@@ -1,12 +1,14 @@
+import { useState } from 'react'
 import { Routes, Route, NavLink, useLocation } from 'react-router-dom'
 import {
   Search, Users, BarChart2, Brain, Settings,
-  Shield, Activity, GitBranch
+  Shield, Activity, GitBranch, Globe, Menu, X
 } from 'lucide-react'
 import SearchPage      from './pages/SearchPage'
 import UserPage        from './pages/UserPage'
 import InsightsPage    from './pages/InsightsPage'
 import AnalyticsPage   from './pages/AnalyticsPage'
+import SourcesPage     from './pages/SourcesPage'
 import SystemPage      from './pages/SystemPage'
 import AuthPage        from './pages/AuthPage'
 import GraphPage       from './pages/GraphPage'
@@ -17,6 +19,7 @@ const NAV = [
   { to: '/user',      icon: Users,     label: 'User Intel' },
   { to: '/graph',     icon: GitBranch, label: 'Graph'      },
   { to: '/insights',  icon: Brain,     label: 'AI Insights'},
+  { to: '/sources',   icon: Globe,     label: 'Sources'    },
   { to: '/analytics', icon: BarChart2, label: 'Analytics'  },
   { to: '/system',    icon: Settings,  label: 'System'     },
   { to: '/auth',      icon: Shield,    label: 'Auth'       },
@@ -24,9 +27,17 @@ const NAV = [
 
 export default function App() {
   const loc = useLocation()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  function closeSidebar() { setSidebarOpen(false) }
+
   return (
     <div className="app-shell">
-      <aside className="sidebar">
+      <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Toggle sidebar">
+        {sidebarOpen ? <X size={16} /> : <Menu size={16} />}
+      </button>
+      <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={closeSidebar} />
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-logo">
           <span className="logo-mark">P</span>
           <span className="logo-text">RETO</span>
@@ -39,6 +50,7 @@ export default function App() {
               to={to}
               end={to === '/'}
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              onClick={closeSidebar}
             >
               <Icon size={15} />
               <span>{label}</span>
@@ -56,6 +68,7 @@ export default function App() {
           <Route path="/"                element={<SearchPage />} />
           <Route path="/user"            element={<UserPage />} />
           <Route path="/insights"        element={<InsightsPage />} />
+          <Route path="/sources"         element={<SourcesPage />} />
           <Route path="/analytics"       element={<AnalyticsPage />} />
           <Route path="/system"          element={<SystemPage />} />
           <Route path="/auth"            element={<AuthPage />} />

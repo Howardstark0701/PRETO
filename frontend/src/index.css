@@ -1,47 +1,85 @@
-/* PRETO — Palantir-inspired dark theme */
+/* PRETO — Tactical Intelligence System (Stitch DESIGN.md) */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg-base:      #0b0e14;
-  --bg-panel:     #111827;
-  --bg-card:      #161d2e;
-  --bg-hover:     #1e2a40;
-  --border:       #1f2d45;
-  --border-light: #2a3a55;
-  --accent:       #00d4b4;
-  --accent-dim:   #00907a;
-  --accent2:      #3b82f6;
-  --danger:       #ef4444;
+  /* ── Surface / Background ── */
+  --bg-base:      #0d141d;
+  --bg-panel:     #192029;
+  --bg-card:      #232a34;
+  --bg-hover:     #2e353f;
+
+  /* ── Borders ── */
+  --border:       #3b4a45;
+  --border-light: #84948f;
+
+  /* ── Accents ── */
+  --accent:        #00d4b4;
+  --accent-bright: #46f1cf;
+  --accent-dim:    #006b5a;
+  --accent2:       #3b82f6;
+
+  /* ── Semantic ── */
+  --danger:       #ffb4ab;
   --warn:         #f59e0b;
-  --text-primary: #e2e8f0;
-  --text-muted:   #64748b;
-  --text-dim:     #94a3b8;
-  --font:         'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+  /* ── Text ── */
+  --text-primary: #dce3f0;
+  --text-muted:   #bacac4;
+  --text-dim:     #84948f;
+
+  /* ── Typography families ── */
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-ui:      'Karla', sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+  /* ── Typography scale ── */
+  --headline-lg:  700 32px/40px var(--font-heading);
+  --headline-md:  600 24px/32px var(--font-heading);
+  --headline-sm:  600 18px/24px var(--font-heading);
+  --body-lg:      400 16px/24px var(--font-ui);
+  --body-md:      400 14px/20px var(--font-ui);
+  --body-sm:      400 13px/18px var(--font-ui);
+  --data-lg:      500 14px/20px var(--font-mono);
+  --data-sm:      400 12px/16px var(--font-mono);
+  --label-caps:   700 11px/16px var(--font-mono);
+
+  /* ── Spacing ── */
+  --space-unit: 4px;
+  --space-xs:   4px;
+  --space-sm:   8px;
+  --space-md:   16px;
+  --space-lg:   24px;
+  --space-xl:   32px;
+  --gutter:     12px;
+  --margin:     16px;
+
+  /* ── Shape ── */
+  --radius: 0px;
 }
 
 html, body, #root {
   height: 100%;
   background: var(--bg-base);
   color: var(--text-primary);
-  font-family: var(--font);
+  font-family: var(--font-ui);
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 18px;
 }
 
 a { color: var(--accent); text-decoration: none; }
-a:hover { color: var(--accent-dim); }
+a:hover { color: var(--accent-bright); }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-base); }
-::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border); }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent-dim); }
 
 button {
-  font-family: var(--font);
+  font-family: var(--font-ui);
   cursor: pointer;
 }
 
 input, select, textarea {
-  font-family: var(--font);
+  font-family: var(--font-ui);
   font-size: 13px;
 }

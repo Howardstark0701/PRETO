@@ -70,7 +70,7 @@ export default function SystemPage() {
                 {new Date(health.timestamp).toLocaleString()}
               </div>
             </>
-          ) : <div className="loading"><div className="spinner" /></div>}
+          ) : <><div className="skeleton skeleton-text" style={{ width: '50%' }} /><div className="skeleton skeleton-line" style={{ width: '70%', marginTop: 8 }} /></>}
         </div>
 
         {/* Cache */}
@@ -96,7 +96,7 @@ export default function SystemPage() {
                 </button>
               </div>
             </>
-          ) : <div className="loading"><div className="spinner" /></div>}
+          ) : <><div className="skeleton skeleton-line" /><div className="skeleton skeleton-line" /><div className="skeleton skeleton-line" style={{ width: '50%' }} /></>}
         </div>
 
         {/* Scheduler */}
@@ -126,7 +126,7 @@ export default function SystemPage() {
                 </div>
               ))}
             </>
-          ) : <div className="loading"><div className="spinner" /></div>}
+          ) : <><div className="skeleton skeleton-line" /><div className="skeleton skeleton-line" style={{ width: '65%' }} /></>}
         </div>
 
         {/* Sync */}
@@ -144,8 +144,9 @@ export default function SystemPage() {
                 )}
               </tbody>
             </table>
-          ) : <div className="loading"><div className="spinner" /></div>}
+          ) : <><div className="skeleton skeleton-line" /><div className="skeleton skeleton-line" /><div className="skeleton skeleton-line" /><div className="skeleton skeleton-line" style={{ width: '45%' }} /></>}
         </div>
+
 
       </div>
     </div>
