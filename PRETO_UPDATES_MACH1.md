@@ -396,6 +396,7 @@ Week 6: Phase 4c + Phase 5 — X, Dev.to, GitHub Enhancements + Multi-Model AI �
 | **Data sources** | GitHub only | GitHub + GitLab + Reddit + HN + X + Dev.to | ✅ Done |
 | **Scrapers** | 1 | 6 | ✅ Done |
 | **UI pages** | 7 | 7 (+ SourcesPage) | ✅ Done |
+| **InsightsPage Activity Feed** | Basic list timeline | Source filter pills, GitHub integration, shared inset toggle with teal top-border active state, grouped date headers, platform-colored timeline dots, scrollable feed | ✅ Done |
 
 ---
 

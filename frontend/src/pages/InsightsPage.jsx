@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Brain, MessageSquare, Activity, AlertTriangle, Map } from 'lucide-react'
-import { insights } from '../api'
+import { Brain, MessageSquare, Activity, List, Clock, ExternalLink } from 'lucide-react'
+import { insights, sources, repos } from '../api'
 
 const DEFAULT_MODEL = "meta/llama-3.1-70b-instruct"
+
+const SOURCE_COLORS = { github: '#6e7681', reddit: '#ff4500', hackernews: '#ff6600', devto: '#7c3aed', gitlab: '#fc6d26', x: '#e7e9ea' }
+const ALL_SOURCES = ['github','reddit','hn','devto','gitlab','x']
 
 export default function InsightsPage() {
   const [tab, setTab]             = useState('query')
@@ -16,6 +19,22 @@ export default function InsightsPage() {
   const [analyzeJson, setAnalyzeJson] = useState('[]')
   const [analysisType, setAnalysisType] = useState('general')
   const [analysisResult, setAnalysisResult] = useState(null)
+
+  // Activity feed state
+  const [feedUsername, setFeedUsername] = useState('')
+  const [feedEvents, setFeedEvents]     = useState([])
+  const [feedLoading, setFeedLoading]   = useState(false)
+  const [feedError, setFeedError]       = useState(null)
+  const [feedView, setFeedView]         = useState('list')
+  const [activeSources, setActiveSources] = useState(() => new Set(ALL_SOURCES))
+
+  function toggleSource(s) {
+    setActiveSources(prev => {
+      const next = new Set(prev)
+      if (next.has(s)) next.delete(s); else next.add(s)
+      return next
+    })
+  }
 
   useEffect(() => {
     insights.health()
@@ -48,6 +67,86 @@ export default function InsightsPage() {
     finally { setLoading(false) }
   }
 
+  async function loadActivityFeed() {
+    if (!feedUsername.trim()) return
+    setFeedLoading(true); setFeedError(null); setFeedEvents([])
+    const events = []
+
+    const promises = {}
+    const active = activeSources
+
+    if (active.has('reddit'))
+      promises.reddit = sources.reddit.submissions(feedUsername, 10).catch(() => ({ posts: [] }))
+    if (active.has('hn'))
+      promises.hn = sources.hackernews.submissions(feedUsername, 10).catch(() => ({ submissions: [] }))
+    if (active.has('x'))
+      promises.x = sources.x.tweets(feedUsername, 10).catch(() => ({ tweets: [] }))
+    if (active.has('devto'))
+      promises.devto = sources.devto.articles(feedUsername, 10).catch(() => ({ articles: [] }))
+    if (active.has('gitlab'))
+      promises.gitlab = sources.gitlab.userProjects(feedUsername, 10).catch(() => ({ projects: [] }))
+    if (active.has('github'))
+      promises.github = repos.userRepos(feedUsername).catch(() => ({ repos: [] }))
+
+    try {
+      const results = await Promise.allSettled(Object.entries(promises).map(([k, v]) => v.then(d => [k, d])))
+      for (const r of results) {
+        if (r.status !== 'fulfilled') continue
+        const [key, data] = r.value
+        if (key === 'reddit' && data?.posts) {
+          data.posts.forEach(p => events.push({
+            source: 'reddit', ts: p.created_utc || p.created, title: p.title, url: p.url, username: feedUsername,
+            engagement: { upvotes: p.ups || 0, comments: p.num_comments || 0 },
+            type: 'post',
+          }))
+        }
+        if (key === 'hn' && data?.submissions) {
+          data.submissions.forEach(s => events.push({
+            source: 'hackernews', ts: s.time || s.created_at, title: s.title, url: s.url, username: feedUsername,
+            engagement: { upvotes: s.score || 0, comments: s.descendants || 0 },
+            type: 'submission',
+          }))
+        }
+        if (key === 'x' && data?.tweets) {
+          data.tweets.forEach(t => events.push({
+            source: 'x', ts: t.created_at, title: t.text, url: t.url, username: feedUsername,
+            engagement: { likes: t.favorite_count || 0, retweets: t.retweet_count || 0 },
+            type: 'tweet',
+          }))
+        }
+        if (key === 'devto' && data?.articles) {
+          data.articles.forEach(a => events.push({
+            source: 'devto', ts: a.published_at, title: a.title, url: a.url, username: feedUsername,
+            engagement: { likes: a.public_reactions_count || 0, comments: a.comments_count || 0 },
+            type: 'article',
+          }))
+        }
+        if (key === 'gitlab' && data?.projects) {
+          data.projects.forEach(p => events.push({
+            source: 'gitlab', ts: p.last_activity_at || p.created_at, title: p.name || p.path, url: p.web_url, username: feedUsername,
+            engagement: { stars: p.star_count || 0, forks: p.forks_count || 0 },
+            type: 'project',
+          }))
+        }
+        if (key === 'github' && data?.repos) {
+          data.repos.forEach(r => events.push({
+            source: 'github', ts: r.updated_at || r.pushed_at || r.created_at, title: r.name, url: r.html_url, username: feedUsername,
+            engagement: { stars: r.stargazers_count || 0, forks: r.forks_count || 0 },
+            type: 'repo',
+          }))
+        }
+      }
+      events.sort((a, b) => {
+        const ta = a.ts ? new Date(a.ts).getTime() : 0
+        const tb = b.ts ? new Date(b.ts).getTime() : 0
+        return tb - ta
+      })
+      setFeedEvents(events)
+      if (events.length === 0) setFeedError('No activity found for this user on selected platforms')
+    } catch (e) { setFeedError(e.message) }
+    finally { setFeedLoading(false) }
+  }
+
   const nimOk = health?.nim_configured
 
   return (
@@ -78,7 +177,7 @@ export default function InsightsPage() {
 
       {/* Tabs */}
       <div className="mode-b-tabs">
-        {[['query','QUERY_ENGINE'],['analyze','REPO_ANALYZER'],['signals','SIGNAL_LOG'],['geo','GEOSPATIAL']].map(([k, l]) => (
+        {[['query','QUERY_ENGINE'],['analyze','REPO_ANALYZER'],['activity','ACTIVITY_FEED']].map(([k, l]) => (
           <button key={k} className={`mode-b-tab ${tab === k ? 'active' : ''}`} onClick={() => setTab(k)}>{l}</button>
         ))}
       </div>
@@ -188,30 +287,253 @@ export default function InsightsPage() {
         </div>
       )}
 
-      {/* ── Signal Log Tab ── */}
-      {tab === 'signals' && (
-        <div className="panel">
-          <div className="panel-header"><AlertTriangle size={11} /> PREDICTIVE_ALERT_LOG</div>
-          <table className="data-table">
-            <thead>
-              <tr><th>TIMESTAMP</th><th>SIGNAL</th><th>SEVERITY</th><th>SOURCE</th><th>STATUS</th></tr>
-            </thead>
-            <tbody>
-              <tr><td style={{ fontFamily: 'var(--font-mono)', fontSize: 10 }}>—</td><td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 11 }}>NO SIGNALS DETECTED</td></tr>
-            </tbody>
-          </table>
-        </div>
-      )}
+      {/* ── Activity Feed Tab ── */}
+      {tab === 'activity' && (
+        <div className="panel" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="panel-header"><Activity size={11} /> CROSS_SOURCE_ACTIVITY_FEED</div>
 
-      {/* ── Geospatial Tab ── */}
-      {tab === 'geo' && (
-        <div className="panel">
-          <div className="panel-header"><Map size={11} /> GEOSPATIAL_OVERLAY</div>
-          <div className="empty-state">
-            <Map size={32} style={{ marginBottom: 8, opacity: 0.3 }} />
-            <div style={{ fontFamily: 'var(--font-mono)', letterSpacing: 1, fontSize: 11 }}>GEOSPATIAL MAP UNAVAILABLE</div>
-            <div style={{ fontSize: 10, marginTop: 6, color: 'var(--text-muted)' }}>Map visualization requires backend integration</div>
+          {/* Username input — full width */}
+          <input className="form-input"
+            style={{ width: '100%', minWidth: 'unset', fontFamily: 'var(--font-mono)', fontSize: 13, background: 'var(--bg-terminal)', border: '1px solid var(--accent)', letterSpacing: 0.5 }}
+            placeholder="TARGET_USERNAME"
+            value={feedUsername}
+            onChange={e => setFeedUsername(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && loadActivityFeed()}
+          />
+
+          {/* Source filter pills + toggle group row */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+            {/* Left side: FETCH button + platform pills */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+              <button className="btn btn-primary" onClick={loadActivityFeed} disabled={feedLoading} style={{ padding: '4px 14px', fontSize: 10, letterSpacing: 1 }}>
+                {feedLoading ? '⟳ FETCHING...' : '▼ FETCH'}
+              </button>
+              {ALL_SOURCES.map(s => {
+                const active = activeSources.has(s)
+                const col = SOURCE_COLORS[s] || 'var(--text-muted)'
+                return (
+                  <button key={s} onClick={() => toggleSource(s)}
+                    style={{
+                      fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: 1, cursor: 'pointer',
+                      padding: '3px 10px', border: `1px solid ${active ? col : 'var(--border)'}`, background: active ? `${col}18` : 'transparent',
+                      color: active ? col : 'var(--text-muted)', textTransform: 'uppercase',
+                    }}>
+                    {s === 'hn' ? 'HN' : s === 'x' ? 'X' : s.toUpperCase()}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Right side: view toggle group — shared inset container */}
+            <div style={{ display: 'flex', border: '1px solid var(--border)', background: 'var(--bg-card)', flexShrink: 0 }}>
+              {['list','timeline'].map(v => (
+                <button key={v} onClick={() => setFeedView(v)}
+                  style={{
+                    fontSize: 10, letterSpacing: 1.5, cursor: 'pointer',
+                    padding: '5px 14px', border: 'none', textTransform: 'uppercase', position: 'relative',
+                    background: feedView === v ? 'var(--bg-hover)' : 'transparent',
+                    color: feedView === v ? 'var(--accent)' : 'var(--text-muted)',
+                    borderTop: feedView === v ? '2px solid var(--accent)' : '2px solid transparent',
+                    transition: 'none',
+                  }}>
+                  {v === 'list' ? <><List size={10} style={{ marginRight: 4, verticalAlign: 'middle' }} /> LIST</> : <><Clock size={10} style={{ marginRight: 4, verticalAlign: 'middle' }} /> TIMELINE</>}
+                </button>
+              ))}
+            </div>
           </div>
+
+          {/* Event count */}
+          {feedEvents.length > 0 && !feedLoading && (
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1, textAlign: 'right' }}>
+              {feedEvents.length} EVENT{feedEvents.length !== 1 ? 'S' : ''} CAPTURED
+            </div>
+          )}
+
+          {feedError && <div className="msg-box msg-error" style={{ marginBottom: 4, fontSize: 10 }}>{feedError}</div>}
+
+          {/* Loading */}
+          {feedLoading && (
+            <div style={{ padding: 16 }}>
+              {[1,2,3,4,5].map(i => <div key={i} className="skeleton skeleton-line" style={{ width: `${85 - i*10}%`, marginBottom: 6 }} />)}
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!feedLoading && feedEvents.length === 0 && !feedError && (
+            <div className="empty-state" style={{ marginTop: 4 }}>
+              <Activity size={32} style={{ marginBottom: 6, opacity: 0.3 }} />
+              <div style={{ fontFamily: 'var(--font-mono)', letterSpacing: 1, fontSize: 11 }}>ENTER USERNAME TO SCAN ALL PLATFORMS</div>
+              <div style={{ fontSize: 10, marginTop: 2, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>GITHUB · REDDIT · HN · DEV.TO · GITLAB · X</div>
+            </div>
+          )}
+
+          {/* ── LIST VIEW ── */}
+          {!feedLoading && feedEvents.length > 0 && feedView === 'list' && (() => {
+            const grouped = {}
+            const now = new Date()
+            const todayStr = now.toISOString().slice(0,10)
+            const yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1)
+            const yesterdayStr = yesterday.toISOString().slice(0,10)
+            feedEvents.forEach(ev => {
+              const d = ev.ts ? new Date(ev.ts).toISOString().slice(0,10) : 'unknown'
+              if (!grouped[d]) grouped[d] = { label: d === todayStr ? `TODAY — ${d}` : d === yesterdayStr ? `YESTERDAY — ${d}` : d, events: [] }
+              grouped[d].events.push(ev)
+            })
+            const sortedDates = Object.keys(grouped).sort((a,b) => b.localeCompare(a))
+
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', maxHeight: 520, overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: 'var(--accent-dim) transparent' }}>
+                {sortedDates.map(dateKey => {
+                  const grp = grouped[dateKey]
+                  return (
+                    <div key={dateKey} style={{ marginBottom: 8 }}>
+                      <div style={{
+                        fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: 1.5, color: 'var(--text-muted)',
+                        padding: '4px 0 6px 0', borderBottom: '1px solid var(--border)', marginBottom: 4,
+                      }}>
+                        {grp.label}
+                      </div>
+                      {grp.events.map((ev, i) => {
+                        const col = SOURCE_COLORS[ev.source] || 'var(--accent)'
+                        const label = ev.source === 'hackernews' ? 'HN' : ev.source.toUpperCase()
+                        return (
+                          <div key={`${dateKey}-${i}`} style={{
+                            display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px', fontSize: 11,
+                            background: 'transparent', cursor: 'default',
+                          }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                          >
+                            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-muted)', whiteSpace: 'nowrap', minWidth: 80 }}>
+                              {ev.ts ? new Date(ev.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                            </span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap', minWidth: 60, fontWeight: 700, fontSize: 10, color: col }}>
+                              <span style={{ width: 6, height: 6, borderRadius: '50%', background: col, display: 'inline-block', flexShrink: 0 }} />
+                              {label}
+                            </span>
+                            <span style={{ flex: 1, color: 'var(--text-dim)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 10 }}>
+                              <span style={{ color: 'var(--text-muted)' }}>{ev.username || feedUsername} </span>
+                              {ev.type === 'post' && 'posted '}
+                              {ev.type === 'submission' && 'submitted '}
+                              {ev.type === 'tweet' && 'tweeted '}
+                              {ev.type === 'article' && 'published '}
+                              {ev.type === 'repo' && 'updated repo '}
+                              {ev.type === 'project' && 'updated project '}
+                              {ev.url
+                                ? <a href={ev.url} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)', fontSize: 10 }}>{ev.title}</a>
+                                : <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9 }}>{ev.title}</span>
+                              }
+                            </span>
+                            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-muted)', whiteSpace: 'nowrap', display: 'flex', gap: 8, alignItems: 'center', minWidth: 80, justifyContent: 'flex-end' }}>
+                              {ev.engagement?.stars != null && <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>★{ev.engagement.stars}</span>}
+                              {ev.engagement?.forks != null && <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>⑂{ev.engagement.forks}</span>}
+                              {ev.engagement?.upvotes != null && <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>▲{ev.engagement.upvotes}</span>}
+                              {ev.engagement?.likes != null && <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>♥{ev.engagement.likes}</span>}
+                              {ev.engagement?.retweets != null && <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>↻{ev.engagement.retweets}</span>}
+                              {ev.engagement?.comments != null && <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>💬{ev.engagement.comments}</span>}
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })()}
+
+          {/* ── TIMELINE VIEW ── */}
+          {!feedLoading && feedEvents.length > 0 && feedView === 'timeline' && (() => {
+            const grouped = {}
+            const now = new Date()
+            const todayStr = now.toISOString().slice(0,10)
+            const yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1)
+            const yesterdayStr = yesterday.toISOString().slice(0,10)
+            feedEvents.forEach(ev => {
+              const d = ev.ts ? new Date(ev.ts).toISOString().slice(0,10) : 'unknown'
+              if (!grouped[d]) grouped[d] = { label: d === todayStr ? `TODAY • ${d}` : d === yesterdayStr ? `YESTERDAY • ${d}` : d, events: [] }
+              grouped[d].events.push(ev)
+            })
+            const sortedDates = Object.keys(grouped).sort((a,b) => b.localeCompare(a))
+
+            return (
+              <div style={{ maxHeight: 520, overflowY: 'auto', scrollbarWidth: 'thin', scrollbarColor: 'var(--accent-dim) transparent' }}>
+                {sortedDates.map(dateKey => {
+                  const grp = grouped[dateKey]
+                  return (
+                    <div key={dateKey} style={{ marginBottom: 16 }}>
+                      <div style={{
+                        fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: 1.5, color: 'var(--text-muted)',
+                        padding: '4px 0 10px 0', marginLeft: 28,
+                      }}>
+                        {grp.label}
+                      </div>
+                      {/* Timeline spine */}
+                      <div style={{ position: 'relative', paddingLeft: 28 }}>
+                        <div style={{
+                          position: 'absolute', left: 9, top: 0, bottom: 0, width: 2,
+                          background: 'linear-gradient(to bottom, var(--accent), rgba(0,212,180,0.08))',
+                        }} />
+                        {grp.events.map((ev, i) => {
+                          const col = SOURCE_COLORS[ev.source] || 'var(--accent)'
+                          const label = ev.source === 'hackernews' ? 'HN' : ev.source.toUpperCase()
+                          return (
+                            <div key={`${dateKey}-${i}`} style={{
+                              position: 'relative', paddingBottom: 12, marginBottom: 8,
+                              background: 'var(--bg-card)', border: '1px solid var(--border)',
+                              padding: '10px 12px 10px 16px',
+                            }}>
+                              {/* Timeline dot */}
+                              <div style={{
+                                position: 'absolute', left: -21, top: 12, width: 10, height: 10, borderRadius: '50%',
+                                background: col, border: '2px solid var(--bg-panel)', zIndex: 1,
+                              }} />
+                              {/* Platform badge top-left */}
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                                <span style={{
+                                  fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: 1, fontWeight: 700,
+                                  color: col, background: `${col}15`, padding: '1px 6px', textTransform: 'uppercase',
+                                }}>
+                                  ● {label}
+                                </span>
+                                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                  {ev.ts ? new Date(ev.ts).toLocaleString() : '—'}
+                                </span>
+                              </div>
+                              {/* Action text */}
+                              <div style={{ fontSize: 11, color: 'var(--text-dim)', lineHeight: 1.4, marginBottom: 6 }}>
+                                <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 10 }}>{ev.username || feedUsername} </span>
+                                {ev.type === 'post' && 'posted '}
+                                {ev.type === 'submission' && 'submitted '}
+                                {ev.type === 'tweet' && 'tweeted '}
+                                {ev.type === 'article' && 'published '}
+                                {ev.type === 'repo' && 'updated repo '}
+                                {ev.type === 'project' && 'updated project '}
+                                {ev.url
+                                  ? <a href={ev.url} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)', fontSize: 10 }}>{ev.title}</a>
+                                  : <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9 }}>{ev.title}</span>
+                                }
+                              </div>
+                              {/* Engagement bottom-left */}
+                              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 8, color: 'var(--text-muted)', display: 'flex', gap: 8 }}>
+                                {ev.engagement?.stars != null && <span>★{ev.engagement.stars}</span>}
+                                {ev.engagement?.forks != null && <span>⑂{ev.engagement.forks}</span>}
+                                {ev.engagement?.upvotes != null && <span>▲{ev.engagement.upvotes}</span>}
+                                {ev.engagement?.likes != null && <span>♥{ev.engagement.likes}</span>}
+                                {ev.engagement?.retweets != null && <span>↻{ev.engagement.retweets}</span>}
+                                {ev.engagement?.comments != null && <span>💬{ev.engagement.comments}</span>}
+                                {(!ev.engagement || Object.values(ev.engagement).every(v => v === 0)) && <span>—</span>}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })()}
         </div>
       )}
     </div>
