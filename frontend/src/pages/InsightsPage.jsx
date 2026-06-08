@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Brain, MessageSquare, Activity, List, Clock, ExternalLink } from 'lucide-react'
 import { insights, sources, repos } from '../api'
 
@@ -27,6 +27,8 @@ export default function InsightsPage() {
   const [feedError, setFeedError]       = useState(null)
   const [feedView, setFeedView]         = useState('list')
   const [activeSources, setActiveSources] = useState(() => new Set(ALL_SOURCES))
+  const activeSourcesRef = useRef(activeSources)
+  activeSourcesRef.current = activeSources
 
   function toggleSource(s) {
     setActiveSources(prev => {
@@ -73,7 +75,7 @@ export default function InsightsPage() {
     const events = []
 
     const promises = {}
-    const active = activeSources
+    const active = activeSourcesRef.current
 
     if (active.has('reddit'))
       promises.reddit = sources.reddit.submissions(feedUsername, 10).catch(() => ({ posts: [] }))
