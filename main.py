@@ -118,17 +118,10 @@ async def metrics():
     return PlainTextResponse(metrics_collector.to_prometheus(), media_type="text/plain")
 
 
-# Welcome endpoint
-@app.get("/", tags=["info"])
+# Welcome endpoint — only shown when no frontend dist exists
+@app.get("/api/info", tags=["info"])
 async def root():
-    """
-    Welcome endpoint with API information.
-    
-    Returns:
-        dict: Welcome message and API documentation links
-    """
     try:
-        logger.info("Welcome endpoint accessed")
         return {
             "name": "PRETO",
             "description": "Open-source OSINT and Public Data Analytics Platform",
@@ -139,28 +132,38 @@ async def root():
             "timestamp": datetime.utcnow().isoformat()
         }
     except Exception as e:
-        logger.error(f"Welcome endpoint error: {str(e)}")
-        return {
-            "error": "Unable to process request",
-            "message": str(e)
-        }, 500
+        logger.error(f"Info endpoint error: {str(e)}")
+        return {"error": "Unable to process request", "message": str(e)}, 500
 
 
 # ── Serve React frontend (production) ─────────────────────────────────────
-# In production the frontend dist is built into frontend/dist/
-# We serve it as static files so a single container handles both API + UI.
 _FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "frontend", "dist")
 if os.path.isdir(_FRONTEND_DIST):
     app.mount("/assets", StaticFiles(directory=os.path.join(_FRONTEND_DIST, "assets")), name="assets")
 
+    @app.get("/", include_in_schema=False)
     @app.get("/{full_path:path}", include_in_schema=False)
-    async def serve_spa(full_path: str):
-        """Catch-all: serve index.html for any non-API route (SPA client-side routing)."""
+    async def serve_spa(full_path: str = ""):
+        """Catch-all: serve index.html for SPA client-side routing."""
         from fastapi.responses import FileResponse
+        # Don't intercept API routes
+        if full_path.startswith("api/"):
+            return JSONResponse({"detail": "Not found"}, status_code=404)
         index = os.path.join(_FRONTEND_DIST, "index.html")
         if os.path.isfile(index):
             return FileResponse(index)
         return JSONResponse({"detail": "Frontend not found"}, status_code=404)
+else:
+    @app.get("/", tags=["info"])
+    async def root():
+        return {
+            "name": "PRETO",
+            "description": "Open-source OSINT and Public Data Analytics Platform",
+            "version": "0.2.0",
+            "docs": "/api/docs",
+            "health": "/api/health",
+            "timestamp": datetime.utcnow().isoformat()
+        }
 
 
 # ============================================================================

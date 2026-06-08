@@ -13,7 +13,7 @@
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?logo=fastapi&logoColor=white)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
-![NVIDIA NIM](https://img.shields.io/badge/NVIDIA_NIM-Multi_Model-76B900?logo=nvidia&logoColor=white)
+![NVIDIA NIM](https://img.shields.io/badge/NVIDIA_NIM-Multi--Model-76B900?logo=nvidia&logoColor=white)
 ![Deployed on Render](https://img.shields.io/badge/Deployed-Render-46E3B7?logo=render&logoColor=white)
 
 </div>
@@ -22,67 +22,75 @@
 
 ## What is PRETO?
 
-Ever wanted to **understand a GitHub user's entire ecosystem at a glance**? Or ask an AI *"What are the most promising OSINT tools built in Python this year?"* and get a real, data-backed answer?
+Ever wanted to **understand a developer's entire digital footprint at a glance**? Or ask an AI *"What are the most promising OSINT tools built in Python this year?"* and get a real, data-backed answer?
 
 That's PRETO.
 
-It's an **OSINT and public data intelligence platform** that aggregates GitHub data, runs AI analysis on it, and presents everything through a sleek Palantir-inspired dark dashboard. No paywalls. No proprietary lock-in. Just clean data and smart insights.
+It's an **open-source OSINT and public data intelligence platform** that aggregates data from GitHub, GitLab, Reddit, Hacker News, X, and Dev.to — runs AI analysis on it — and presents everything through a sharp, Palantir-inspired dark dashboard. No paywalls. No proprietary lock-in.
 
-> Built as a college project to demonstrate full-stack engineering, AI integration, and production deployment — all in one repo.
+> Built as a college project to demonstrate full-stack engineering, multi-source data aggregation, AI integration, and production deployment — all in one repo.
 
 ---
 
-## ✨ What Can It Do?
+## ✨ Features
 
-### 🔎 Search & Discover
-Search GitHub repositories with advanced filters — language, star count, date range. Get paginated results with rich metadata. Save searches for later.
+### 🔎 Multi-Source Intelligence
+Search and aggregate public data across **6 platforms** from one interface:
+- **GitHub** — repos, users, stats, contributors, trending
+- **GitLab** — projects, user profiles
+- **Reddit** — user activity, post history, subreddit analysis
+- **Hacker News** — karma, submissions, comment history
+- **X (Twitter)** — public profile stats, recent tweets
+- **Dev.to** — articles, tags, follower stats
 
 ### 🕸️ Graph Analysis
-The coolest part. Enter any GitHub username and watch a **live force-directed network graph** render their entire ecosystem — repositories, programming languages, and contributors — all connected, draggable, zoomable, and clickable.
+Enter any GitHub username and watch a **live D3.js force-directed network** render their entire ecosystem — repositories, programming languages, and contributors — all connected, draggable, zoomable, and clickable. Filter by language and star count in real time.
 
-Filter by language. Filter by star count. Click any node to see details. It's like a social network graph but for code.
+### 🤖 Multi-Model AI (NVIDIA NIM)
+Ask questions in plain English using your choice of 4 AI models:
 
-### 🤖 AI Insights (NVIDIA NIM — Multi-Model)
-Ask questions in plain English:
-- *"Which repos show signs of active maintenance?"*
-- *"What's the technology footprint of this user?"*
-- *"Summarize the top trending OSINT tools"*
+| Model | Best For |
+|-------|----------|
+| Llama 3.1 70B | Default — balanced and thorough |
+| Llama 3.1 8B | Fast lookups and quick queries |
+| Mixtral 8x22B | Strong analytical reasoning |
+| Nemotron 340B | Deep, comprehensive analysis |
 
-Powered by **NVIDIA NIM** with 4 selectable models — switch between Llama 3.1 70B, Llama 3.1 8B, Mixtral 8x22B, or Nemotron 4 340B. Preference is saved to your browser.
-
-### 🌐 Multi-Source Intelligence
-Search beyond GitHub — **GitLab**, **Reddit**, **Hacker News**, **X (Twitter)**, and **Dev.to** — all in one tabbed interface. Profile stats, activity feeds, and normalized results per source.
+Your model preference is saved automatically. 99% cheaper than GPT-4.
 
 ### 📊 Analytics
-Bar charts, pie charts, trend lines. See stars vs forks, language distribution, activity scoring. Track what's trending in your searches over time.
+Recharts bar and pie charts, trend tracking, repository comparisons, and activity scoring. See what's actually moving in the data.
 
 ### 📤 Export
-Download your intelligence as **JSON**, **CSV**, or a formatted **PDF report**. Because data is only useful if you can share it.
+Download your intelligence as **JSON**, **CSV**, or a formatted **PDF report**.
 
 ### 🔐 Authentication
-Full auth system — register/login with JWT, or one-click **GitHub OAuth**. Your searches and saved data persist across sessions.
+JWT register/login or one-click **GitHub OAuth**. Saved searches, search history, and API key management built in.
 
 ---
 
-## 🖥️ Interface
+## 🎨 Design — MACH1 UI
 
-PRETO uses a **brutalist Palantir-inspired dark UI** — Space Grotesk headings, Karla body text, JetBrains Mono for data. Sharp 0px corners, flat HUD aesthetic, high information density.
+PRETO was redesigned under **MACH1** with a full design system built in Google Stitch:
+
+- **Space Grotesk** for headings and display text
+- **Karla** for UI, navigation, and body copy
+- **JetBrains Mono** reserved for data, code, and table values
+- **Sharp 0px corners** — brutalist HUD aesthetic, not bubbly
+- **Design tokens** from `DESIGN.md` — consistent color palette, spacing, and typography scale across all components
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  PRETO    INTELLIGENCE PLATFORM                             │
+│  P RETO    INTELLIGENCE PLATFORM              ● API LIVE    │
 ├──────────┬──────────────────────────────────────────────────┤
-│          │                                                  │
-│  🔍 Search│   [Search results with filters and pagination]  │
-│  👤 User  │                                                  │
-│  🕸️ Graph │   [Force-directed network of repos/langs/contribs│
-│  🤖 AI    │   [Multi-model NIM chat + analysis]             │
-│  🌐 Sources  [GitLab · Reddit · HN · X · Dev.to]           │
-│  📊 Analytics  [Recharts bar/pie + export buttons]          │
+│  🔍 Search│                                                  │
+│  👤 User  │   Sharp-cornered panels. Dense information.     │
+│  🌐 Sources   Space Grotesk headings. Karla UI copy.        │
+│  🕸️ Graph │   Teal accents. Dark blue-black background.     │
+│  🤖 AI    │   D3 graph. Recharts. Multi-model selector.     │
+│  📊 Analytics                                               │
 │  ⚙️ System│                                                  │
-│  🔐 Auth  │   [JWT login + GitHub OAuth]                    │
-│          │                                                  │
-│  ● API LIVE                                                 │
+│  🔐 Auth  │                                                  │
 └──────────┴──────────────────────────────────────────────────┘
 ```
 
@@ -95,89 +103,47 @@ PRETO uses a **brutalist Palantir-inspired dark UI** — Space Grotesk headings,
 | **Backend** | FastAPI + Python 3.11 | Async, fast, auto-docs |
 | **Database** | SQLite + SQLAlchemy | Zero-config, portable |
 | **Auth** | JWT + GitHub OAuth 2.0 | Industry standard |
-| **AI** | NVIDIA NIM (4 models: Llama/Mixtral/Nemotron) | Multi-model selector, localStorage persistence |
+| **AI** | NVIDIA NIM (4 models) | 99% cheaper than Claude/GPT |
 | **Frontend** | React 18 + Vite | Fast builds, modern DX |
 | **Charts** | Recharts | Composable, responsive |
-| **Graph** | D3.js v7 force simulation | The real deal for network graphs |
-| **Styling** | Custom CSS (dark theme) | Palantir aesthetic |
+| **Graph** | D3.js v7 | Force simulation for network graphs |
+| **Design** | Google Stitch + custom CSS | Palantir aesthetic |
 | **Deployment** | Render + Docker | Free tier, auto-deploy |
 | **CI/CD** | GitHub Actions | Test → Build → Deploy |
 
 ---
 
-## 📡 API — 50+ Endpoints
+## 📡 API — 34+ Endpoints
 
 <details>
-<summary><b>Repositories</b> (5 endpoints)</summary>
+<summary><b>Repositories</b></summary>
 
 ```
-GET  /api/repos/user/{username}           All repos for a user
+GET  /api/repos/user/{username}           User repositories
 GET  /api/repos/user/{username}/stats     User statistics
 GET  /api/repos/search                    Basic search
 GET  /api/repos/search/advanced           Paginated + filtered search
 GET  /api/repos/{owner}/{repo}            Single repo details
+GET  /api/repos/{owner}/{repo}/contributors  Contributors
 ```
 </details>
 
 <details>
-<summary><b>Authentication</b> (8 endpoints)</summary>
+<summary><b>Multi-Source Intelligence</b></summary>
 
 ```
-POST /api/auth/register                   Create account
-POST /api/auth/login                      Login → JWT
-POST /api/auth/refresh                    Refresh token
-GET  /api/auth/me                         Current user
-GET  /api/auth/github                     GitHub OAuth redirect
-GET  /api/auth/github/callback            OAuth callback → JWT
-GET  /api/auth/saved-searches             List saved searches
-POST /api/auth/saved-searches             Save a search
-```
-</details>
-
-
-
-<details>
-<summary><b>Advanced Analytics</b> (5 endpoints)</summary>
-
-```
-POST /api/advanced/analytics              Repository analytics engine
-POST /api/advanced/export                 Export JSON / CSV
-POST /api/advanced/export/pdf             Export PDF report
-GET  /api/advanced/search-trends          Top trending searches
-GET  /api/repos/{owner}/{repo}/contributors  Contributor data
+GET  /api/sources/gitlab/users/{username}
+GET  /api/sources/gitlab/users/{username}/projects
+GET  /api/sources/reddit/users/{username}
+GET  /api/sources/hackernews/users/{username}
+GET  /api/sources/x/users/{username}
+GET  /api/sources/devto/users/{username}
+GET  /api/sources/devto/users/{username}/articles
 ```
 </details>
 
 <details>
-<summary><b>System</b> (3 endpoints)</summary>
-
-```
-GET  /api/health                          Health check
-GET  /api/metrics                         Prometheus metrics
-GET  /                                    API info
-```
-</details>
-
-<details>
-<summary><b>Data Sources</b> (12 endpoints)</summary>
-
-```
-GET  /api/sources/gitlab/users/{username}                GitLab profile
-GET  /api/sources/gitlab/users/{username}/projects       GitLab projects
-GET  /api/sources/reddit/users/{username}                Reddit profile
-GET  /api/sources/reddit/users/{username}/submissions    Reddit posts
-GET  /api/sources/hackernews/users/{username}            HN profile
-GET  /api/sources/hackernews/users/{username}/submissions HN posts
-GET  /api/sources/x/users/{username}                     X profile
-GET  /api/sources/x/users/{username}/tweets              X tweets
-GET  /api/sources/devto/users/{username}                 Dev.to profile
-GET  /api/sources/devto/users/{username}/articles        Dev.to articles
-GET  /api/repos/trending                                 Trending repos
-```
-</details>
-
-<details>
-<summary><b>AI Insights</b> (5 endpoints)</summary>
+<summary><b>AI Insights (NVIDIA NIM)</b></summary>
 
 ```
 GET  /api/insights/health                 NIM service status
@@ -185,6 +151,42 @@ GET  /api/insights/models                 Available AI models
 POST /api/insights/analyze                Analyze repositories
 POST /api/insights/query                  Natural language query
 POST /api/insights/user-analysis          Analyze a GitHub user
+```
+</details>
+
+<details>
+<summary><b>Authentication</b></summary>
+
+```
+POST /api/auth/register
+POST /api/auth/login
+POST /api/auth/refresh
+GET  /api/auth/me
+GET  /api/auth/github                     OAuth redirect
+GET  /api/auth/github/callback            OAuth → JWT
+GET  /api/auth/saved-searches
+POST /api/auth/saved-searches
+```
+</details>
+
+<details>
+<summary><b>Advanced Analytics</b></summary>
+
+```
+POST /api/advanced/analytics
+POST /api/advanced/export                 JSON / CSV
+POST /api/advanced/export/pdf             PDF report
+GET  /api/advanced/search-trends
+```
+</details>
+
+<details>
+<summary><b>System</b></summary>
+
+```
+GET  /api/health
+GET  /api/metrics                         Prometheus metrics
+GET  /
 ```
 </details>
 
@@ -204,7 +206,6 @@ POST /api/insights/user-analysis          Analyze a GitHub user
 git clone https://github.com/Howardstark0701/PRETO.git
 cd PRETO
 
-# Python environment
 python -m venv venv
 source venv/Scripts/activate      # Git Bash on Windows
 # source venv/bin/activate         # macOS/Linux
@@ -216,26 +217,23 @@ pip install -r requirements.txt
 
 ```bash
 cp .env.example .env
+# Edit .env with your keys
 ```
 
-Open `.env` and fill in:
-
+Minimum required:
 ```env
-GITHUB_TOKEN=github_pat_...          # github.com/settings/tokens
-NIM_API_KEY=nvapi-...                # build.nvidia.com
-SECRET_KEY=any-random-string-here
+GITHUB_TOKEN=github_pat_...       # github.com/settings/tokens
+NIM_API_KEY=nvapi-...             # build.nvidia.com
+SECRET_KEY=any-random-string
 ```
-
-Everything else has sensible defaults for local dev.
 
 ### 3. Start backend
 
 ```bash
 python main.py
+# API:  http://localhost:8000
+# Docs: http://localhost:8000/api/docs
 ```
-
-→ API at `http://localhost:8000`  
-→ Docs at `http://localhost:8000/api/docs`
 
 ### 4. Start frontend
 
@@ -243,33 +241,30 @@ python main.py
 cd frontend
 npm install
 npm run dev
+# UI: http://localhost:5173
 ```
-
-→ UI at `http://localhost:5173`
 
 ---
 
 ## 🐳 Docker
 
 ```bash
-# One command to run everything
 docker-compose up --build
+# App at http://localhost:8000
 ```
-
-→ App at `http://localhost:8000`
 
 ---
 
-## ☁️ Deploy Your Own Instance
+## ☁️ Deploy Your Own
 
-PRETO has a `render.yaml` — fork the repo and deploy to Render in under 5 minutes.
+PRETO has a `render.yaml` — fork and deploy to Render in under 5 minutes.
 
 1. Fork this repo
-2. Go to [render.com](https://render.com) → New Web Service → connect your fork
-3. Add your environment variables (see `.env.example`)
-4. Hit deploy
+2. [render.com](https://render.com) → New Web Service → connect your fork
+3. Add env vars from `.env.example`
+4. Deploy
 
-Every push to `master` auto-deploys. See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for the detailed walkthrough including all the issues we hit and how we fixed them.
+Auto-deploys on every push to `master`. See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for the full walkthrough.
 
 ---
 
@@ -277,83 +272,81 @@ Every push to `master` auto-deploys. See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUID
 
 ```
 PRETO/
-├── main.py                      # App entry point + static file serving
-├── requirements.txt             # Pinned Python deps
-├── Dockerfile                   # Multi-stage: Node build + Python prod
+├── main.py                      # FastAPI entry point
+├── requirements.txt
+├── Dockerfile                   # Multi-stage: Node + Python
 ├── render.yaml                  # One-click Render deploy
+├── DESIGN.md                    # Stitch design tokens (MACH1)
 │
 ├── app/
 │   ├── api/
-│   │   ├── routes.py            # Repo endpoints
-│   │   ├── auth_routes.py       # JWT auth endpoints
-│   │   ├── github_oauth.py      # GitHub OAuth 2.0 flow
-│   │   ├── insights.py          # NVIDIA NIM client + rate limiter
-│   │   ├── insights_routes.py   # AI endpoints
-│   │   ├── advanced_routes.py   # Analytics + export
-│   │   ├── advanced_features.py # PDF, CSV, analytics engine
+│   │   ├── routes.py            # Repo + sources endpoints
+│   │   ├── auth_routes.py
+│   │   ├── github_oauth.py
+│   │   ├── insights.py          # NIM multi-model client
+│   │   ├── insights_routes.py
+│   │   ├── advanced_routes.py
 │   │   ├── middleware.py        # Rate limiting + security headers
-│   │   ├── metrics.py           # Thread-safe Prometheus collector
-│   │   ├── cache.py             # In-memory + DB caching
-│   │   ├── crud.py              # Database operations
-│   │   ├── scheduler.py         # APScheduler background jobs
-│   │   └── logging_config.py    # Structured JSON logging
+│   │   ├── metrics.py           # Prometheus collector
+│   │   └── logging_config.py
 │   ├── models/
-│   │   ├── database.py          # SQLAlchemy setup
-│   │   └── auth.py              # User + OAuth model
 │   └── scrapers/
-│       ├── github_scraper.py    # Async GitHub API client
-│       ├── gitlab_scraper.py    # GitLab API client
-│       ├── reddit_scraper.py    # Reddit API client
-│       ├── hackernews_scraper.py # Hacker News Firebase API
-│       ├── x_scraper.py         # X/Twitter profile scraper
-│       └── devto_scraper.py     # Dev.to API client
+│       ├── github_scraper.py
+│       ├── gitlab_scraper.py    # MACH1
+│       ├── reddit_scraper.py    # MACH1
+│       ├── hackernews_scraper.py # MACH1
+│       ├── x_scraper.py         # MACH1
+│       └── devto_scraper.py     # MACH1
 │
 ├── frontend/
 │   └── src/
-│       ├── api.js               # All 34 endpoints in one file
-│       ├── App.jsx              # Router + sidebar
+│       ├── api.js               # All endpoints
+│       ├── App.jsx
 │       └── pages/
 │           ├── SearchPage.jsx
 │           ├── UserPage.jsx
 │           ├── GraphPage.jsx    # D3 force graph
+│           ├── SourcesPage.jsx  # MACH1 — multi-source
+│           ├── InsightsPage.jsx # MACH1 — model selector
 │           ├── AnalyticsPage.jsx
-│           ├── InsightsPage.jsx
-│           ├── SourcesPage.jsx  # Multi-source intelligence
 │           ├── SystemPage.jsx
 │           └── AuthPage.jsx
 │
 └── tests/
-    └── test_health.py           # 5 integration tests
+    └── test_health.py
 ```
 
 ---
 
 ## 🗺️ Roadmap
 
+- [x] GitHub scraper + REST API
+- [x] React dashboard (7 pages)
+- [x] JWT + GitHub OAuth
+- [x] NVIDIA NIM AI insights
+- [x] D3 graph analysis
+- [x] PDF/CSV/JSON export
+- [x] Prometheus metrics + structured logging
+- [x] Production deployment (Render)
+- [x] **MACH1** — Multi-source (GitLab, Reddit, HN, X, Dev.to), Multi-model AI, Stitch UI redesign
 - [ ] PostgreSQL for persistent production storage
 - [ ] Redis caching layer
-- [ ] Multi-user graph comparison
-- [ ] Additional data sources (npm registry, PyPI)
-- [ ] Full unit test suite (target 80% coverage)
-- [x] Multi-model AI selector (4 NIM models)
-- [x] Multi-source intelligence (GitLab, Reddit, HN, X, Dev.to)
-- [x] Stitch UI redesign (sharp 0px, brutalist aesthetic)
+- [ ] Abstract SVG logo (brutalist, no letters)
+- [ ] BYO API key (user-stored OpenAI/Anthropic keys)
+- [ ] Full unit test suite (80%+ coverage)
 
 ---
 
 ## 🤝 Contributing
 
-Pull requests are welcome. For major changes, open an issue first to discuss what you'd like to change.
+PRs are welcome. For major changes, open an issue first.
 
 ```bash
-# Create a feature branch
-git checkout -b feature/your-feature-name
-
-# Make your changes, then
+git checkout -b feature/your-feature
+# make changes
 git commit -m "feat: describe your change"
-git push origin feature/your-feature-name
-
-# Open a pull request on GitHub
+git push origin feature/your-feature
+# open a pull request
 ```
 
 ---
@@ -368,7 +361,7 @@ MIT — free to use, modify, and distribute.
 
 Built with 🔥 by [TANGO](https://github.com/Howardstark0701)
 
-*FastAPI · React · NVIDIA NIM · D3.js · Deployed on Render*
+*FastAPI · React · NVIDIA NIM · D3.js · Google Stitch · Deployed on Render*
 
 **Star the repo if you find it useful ⭐**
 

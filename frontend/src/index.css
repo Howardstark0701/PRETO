@@ -1,36 +1,57 @@
-/* PRETO — Tactical Intelligence System (Stitch DESIGN.md) */
+/* PRETO — Mode B: Tactical Intelligence Dashboard */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* ── Surface / Background ── */
-  --bg-base:      #0d141d;
-  --bg-panel:     #192029;
-  --bg-card:      #232a34;
-  --bg-hover:     #2e353f;
+  /* ── Layout ── */
+  --radius: 0px;
 
-  /* ── Borders ── */
-  --border:       #3b4a45;
-  --border-light: #84948f;
-
-  /* ── Accents ── */
-  --accent:        #00d4b4;
-  --accent-bright: #46f1cf;
-  --accent-dim:    #006b5a;
-  --accent2:       #3b82f6;
-
-  /* ── Semantic ── */
-  --danger:       #ffb4ab;
-  --warn:         #f59e0b;
-
-  /* ── Text ── */
-  --text-primary: #dce3f0;
-  --text-muted:   #bacac4;
-  --text-dim:     #84948f;
-
-  /* ── Typography families ── */
+  /* ── Typography ── */
   --font-heading: 'Space Grotesk', sans-serif;
   --font-ui:      'Karla', sans-serif;
   --font-mono:    'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+  /* ── Base Backgrounds ── */
+  --bg-base:        #0b0e14;
+  --bg-panel:       #111827;
+  --bg-card:        #161d2e;
+  --bg-hover:       #1e2a40;
+  --bg-terminal:    #080b10;
+
+  /* ── Borders ── */
+  --border:         #1f2d45;
+  --border-light:   #2a3a55;
+  --border-active:  #00d4b4;
+
+  /* ── Primary Accent (Teal) ── */
+  --accent:         #00d4b4;
+  --accent-dim:     #00907a;
+  --accent-glow:    rgba(0, 212, 180, 0.15);
+
+  /* ── Secondary Accent (Blue) ── */
+  --accent2:        #3b82f6;
+  --accent2-dim:    #1d4ed8;
+
+  /* ── Status Colors ── */
+  --success:        #22c55e;
+  --success-dim:    #15803d;
+  --warn:           #f59e0b;
+  --warn-dim:       #b45309;
+  --danger:         #ef4444;
+  --danger-dim:     #b91c1c;
+  --info:           #3b82f6;
+
+  /* ── Text ── */
+  --text-primary:   #e2e8f0;
+  --text-muted:     #64748b;
+  --text-dim:       #94a3b8;
+
+  /* ── Data Source Identity Colors ── */
+  --source-github:    #00d4b4;
+  --source-gitlab:    #fc6d26;
+  --source-reddit:    #ff4500;
+  --source-hn:        #ff6600;
+  --source-x:         #e7e9ea;
+  --source-devto:     #7c3aed;
 
   /* ── Typography scale ── */
   --headline-lg:  700 32px/40px var(--font-heading);
@@ -52,9 +73,6 @@
   --space-xl:   32px;
   --gutter:     12px;
   --margin:     16px;
-
-  /* ── Shape ── */
-  --radius: 0px;
 }
 
 html, body, #root {
@@ -67,7 +85,7 @@ html, body, #root {
 }
 
 a { color: var(--accent); text-decoration: none; }
-a:hover { color: var(--accent-bright); }
+a:hover { color: var(--accent-dim); }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-base); }

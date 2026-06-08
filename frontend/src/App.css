@@ -1,3 +1,329 @@
+/* ════════════════════════════════════════════════════════════════
+   Mode B — Tactical Intelligence Dashboard Component Classes
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Breadcrumb ─────────────────────────────────────── */
+.breadcrumb {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  letter-spacing: 0.3px;
+}
+
+/* ── Mode B Tabs (terminal-style) ────────────────────── */
+.mode-b-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.mode-b-tab {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 8px 16px;
+  margin-bottom: -1px;
+  text-transform: uppercase;
+}
+.mode-b-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+.mode-b-tab:hover { color: var(--text-dim); }
+
+/* ── Panel Header ─────────────────────────────────────── */
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+/* ── Status Badges (dot style) ────────────────────────── */
+.status-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border: 1px solid;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.status-operational { color: var(--success); border-color: var(--success); }
+.status-warning     { color: var(--warn);   border-color: var(--warn); }
+.status-critical    { color: var(--danger); border-color: var(--danger); }
+.status-info        { color: var(--info);   border-color: var(--info); }
+.status-stable      { color: var(--accent); border-color: var(--accent); }
+
+/* ── Message Boxes ─────────────────────────────────────── */
+.msg-box {
+  padding: 8px 12px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  border: 1px solid;
+}
+.msg-info  { background: var(--accent-glow); border-color: var(--accent-dim); color: var(--accent); }
+.msg-error { background: rgba(239,68,68,0.08); border-color: var(--danger-dim); color: var(--danger); }
+
+/* ── Small Button ──────────────────────────────────────── */
+.btn-sm { padding: 4px 10px; font-size: 9px; letter-spacing: 0.5px; }
+
+/* ── Meta Row (key: value two-column) ────────────────── */
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+.meta-row:last-child { border-bottom: none; }
+.meta-key {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.meta-val {
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+/* ── Progress Bar ──────────────────────────────────────── */
+.progress-bar {
+  height: 4px;
+  background: var(--bg-card);
+  position: relative;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+
+/* ── Terminal Block ────────────────────────────────────── */
+.terminal-block {
+  background: var(--bg-terminal);
+  border: 1px solid var(--border);
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.6;
+  overflow: auto;
+  max-height: 200px;
+}
+.terminal-line { white-space: pre-wrap; }
+.terminal-line.dim  { color: var(--text-muted); }
+.terminal-line.ok   { color: var(--success); }
+.terminal-line.warn { color: var(--warn); }
+.terminal-line.err  { color: var(--danger); }
+.terminal-cursor::after {
+  content: '█';
+  animation: blink 1s step-end infinite;
+  color: var(--accent);
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+
+/* ── Source Badges ─────────────────────────────────────── */
+.source-badge-github  { color: var(--source-github);  border-color: var(--source-github); }
+.source-badge-gitlab  { color: var(--source-gitlab);  border-color: var(--source-gitlab); }
+.source-badge-reddit  { color: var(--source-reddit);  border-color: var(--source-reddit); }
+.source-badge-hn      { color: var(--source-hn);      border-color: var(--source-hn); }
+.source-badge-x       { color: var(--source-x);       border-color: var(--source-x); }
+.source-badge-devto   { color: var(--source-devto);   border-color: var(--source-devto); }
+
+/* ── Auth Page (Mode B) ────────────────────────────────── */
+.auth-mode-b {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  position: relative;
+}
+.auth-card {
+  width: 100%;
+  max-width: 480px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  padding: 32px;
+  position: relative;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.auth-card:focus-within {
+  border-color: var(--border-active);
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+.auth-card-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  border: 1px solid var(--accent-dim);
+  padding: 2px 6px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.auth-logo {
+  text-align: center;
+  margin-bottom: 12px;
+}
+.auth-logo-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--accent);
+  color: #000;
+  font-family: var(--font-heading);
+  font-weight: 900;
+  font-size: 20px;
+}
+.auth-title {
+  text-align: center;
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+.auth-subtitle {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  margin-bottom: 24px;
+}
+.auth-form { display: flex; flex-direction: column; gap: 14px; }
+.auth-field { display: flex; flex-direction: column; gap: 5px; }
+.auth-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.auth-input {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-primary);
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+.auth-input:focus { border-color: var(--border-active); }
+.auth-pw-wrap { position: relative; }
+.auth-pw-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+}
+.auth-pw-toggle:hover { color: var(--accent); }
+.auth-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.auth-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.auth-checkbox input { accent-color: var(--accent); }
+.auth-cta {
+  width: 100%;
+  justify-content: center;
+  padding: 12px;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+.auth-oauth { margin-top: 4px; }
+.auth-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.auth-footer-item {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-dim);
+}
+.auth-footer-links { display: flex; gap: 12px; }
+.auth-footer-links a {
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+.auth-footer-links a:hover { color: var(--accent); }
+.auth-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 24px;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border);
+  font-size: 9px;
+}
+.auth-bottom-left, .auth-bottom-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.auth-bottom-label {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+.auth-bottom-value {
+  font-family: var(--font-mono);
+  color: var(--accent);
+}
+
 /* ── Layout ────────────────────────────────────────────────────── */
 .app-shell {
   display: flex;
