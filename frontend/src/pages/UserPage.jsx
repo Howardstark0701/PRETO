@@ -175,6 +175,7 @@ export default function UserPage() {
                   <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'var(--font-mono)' }} />
                   <Tooltip
                     contentStyle={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', fontSize: 10, borderRadius: 0 }}
+                    labelStyle={{ color: '#94a3b8' }}
                     cursor={{ fill: 'rgba(0,212,180,0.05)' }}
                   />
                   <Bar dataKey="count" radius={[0,0,0,0]}>

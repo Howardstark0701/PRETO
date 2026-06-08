@@ -105,7 +105,7 @@ export default function AnalyticsPage() {
                 <LineChart data={signalVolumeData} margin={{ top: 6, right: 12, bottom: 6, left: -20 }}>
                   <XAxis dataKey="month" tick={MONO_TICK} stroke="#1f2d45" />
                   <YAxis tick={MONO_TICK} stroke="#1f2d45" />
-                  <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ stroke: 'rgba(0,212,180,0.2)' }} />
+                  <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#94a3b8' }} cursor={{ stroke: 'rgba(0,212,180,0.2)' }} />
                   <Line type="monotone" dataKey="signals" stroke="#00d4b4" strokeWidth={2} dot={{ fill: '#00d4b4', r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
@@ -124,7 +124,7 @@ export default function AnalyticsPage() {
                     labelLine={false} style={{ fontSize: 9, fontFamily: 'var(--font-mono)' }}>
                     {langData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
-                  <Tooltip contentStyle={TOOLTIP_STYLE} />
+                  <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#94a3b8' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -136,7 +136,7 @@ export default function AnalyticsPage() {
               <BarChart data={starData} margin={{ top: 0, right: 0, bottom: 20, left: -20 }}>
                 <XAxis dataKey="name" tick={MONO_TICK} angle={-20} textAnchor="end" stroke="#1f2d45" />
                 <YAxis tick={MONO_TICK} stroke="#1f2d45" />
-                <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: 'rgba(0,212,180,0.05)' }} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#94a3b8' }} cursor={{ fill: 'rgba(0,212,180,0.05)' }} />
                 <Bar dataKey="stars" fill="#00d4b4" radius={[0,0,0,0]} />
                 <Bar dataKey="forks" fill="#3b82f6" radius={[0,0,0,0]} />
               </BarChart>

@@ -72,12 +72,15 @@ function buildGraph(username, reposData, contributorMap = {}, filters = {}) {
 /* ── D3 render ───────────────────────────────────────────────────────────── */
 function renderGraph(svgEl, { nodes, links }, onSelect) {
   const d3     = window.d3
-  const width  = svgEl.clientWidth  || 900
-  const height = svgEl.clientHeight || 580
+  const rect  = svgEl.getBoundingClientRect()
+  const width  = rect.width  || 900
+  const height = rect.height || 580
 
   d3.select(svgEl).selectAll('*').remove()
 
-  const svg = d3.select(svgEl).attr('width', width).attr('height', height)
+  const svg = d3.select(svgEl)
+    .attr('width', width).attr('height', height)
+    .attr('viewBox', `0 0 ${width} ${height}`)
   const g   = svg.append('g')
 
   svg.call(
@@ -250,7 +253,7 @@ export default function GraphPage() {
   const languages = [...new Set(reposCache.map(r => r.language).filter(Boolean))].sort()
 
   return (
-    <div className="page" style={{ paddingBottom: 0, display: 'flex', flexDirection: 'column' }}>
+    <div className="page" style={{ paddingBottom: 0, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 48px)' }}>
       <div className="breadcrumb">OSINT COMMAND / GRAPH_ANALYSIS</div>
 
       {/* Controls */}
