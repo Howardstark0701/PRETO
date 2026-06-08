@@ -915,3 +915,30 @@
   font-size: 11px;
   color: var(--text-muted);
 }
+
+.toggle-group {
+  display: flex;
+  border: 1px solid #1a2535;
+  background: #080c10;
+  padding: 3px;
+  gap: 2px;
+}
+
+.toggle-group button {
+  background: transparent;
+  border: none;
+  border-top: 2px solid transparent;
+  color: #6a8aaa;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  padding: 4px 14px;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.toggle-group button.active {
+  border-top: 2px solid #00d4b4;
+  background: #0d1219;
+  color: #ffffff;
+}

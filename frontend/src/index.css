@@ -1,4 +1,11 @@
 /* PRETO — Mode B: Tactical Intelligence Dashboard */
+html {
+  font-size: 14px;
+}
+body {
+  font-size: 14px;
+  line-height: 1.5;
+}
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {

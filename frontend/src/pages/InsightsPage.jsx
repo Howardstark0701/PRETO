@@ -325,17 +325,9 @@ export default function InsightsPage() {
             </div>
 
             {/* Right side: view toggle group — shared inset container */}
-            <div style={{ display: 'flex', border: '1px solid var(--border)', background: 'var(--bg-card)', flexShrink: 0 }}>
+            <div className="toggle-group">
               {['list','timeline'].map(v => (
-                <button key={v} onClick={() => setFeedView(v)}
-                  style={{
-                    fontSize: 10, letterSpacing: 1.5, cursor: 'pointer',
-                    padding: '5px 14px', border: 'none', textTransform: 'uppercase', position: 'relative',
-                    background: feedView === v ? 'var(--bg-hover)' : 'transparent',
-                    color: feedView === v ? 'var(--accent)' : 'var(--text-muted)',
-                    borderTop: feedView === v ? '2px solid var(--accent)' : '2px solid transparent',
-                    transition: 'none',
-                  }}>
+                <button key={v} onClick={() => setFeedView(v)} className={feedView === v ? 'active' : ''}>
                   {v === 'list' ? <><List size={10} style={{ marginRight: 4, verticalAlign: 'middle' }} /> LIST</> : <><Clock size={10} style={{ marginRight: 4, verticalAlign: 'middle' }} /> TIMELINE</>}
                 </button>
               ))}
