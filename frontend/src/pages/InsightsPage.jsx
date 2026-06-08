@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react'
-import { Brain, MessageSquare } from 'lucide-react'
+import { Brain, MessageSquare, Activity, AlertTriangle, Map } from 'lucide-react'
 import { insights } from '../api'
 
 const DEFAULT_MODEL = "meta/llama-3.1-70b-instruct"
 
 export default function InsightsPage() {
-  const [tab, setTab]           = useState('query')
-  const [health, setHealth]     = useState(null)
-  const [models, setModels]     = useState([])
-  const [model, setModel]       = useState(() => localStorage.getItem('preto-ai-model') || DEFAULT_MODEL)
-  const [query, setQuery]       = useState('')
-  const [answer, setAnswer]     = useState('')
-  const [loading, setLoading]   = useState(false)
-  const [error, setError]       = useState(null)
+  const [tab, setTab]             = useState('query')
+  const [health, setHealth]       = useState(null)
+  const [models, setModels]       = useState([])
+  const [model, setModel]         = useState(() => localStorage.getItem('preto-ai-model') || DEFAULT_MODEL)
+  const [query, setQuery]         = useState('')
+  const [answer, setAnswer]       = useState('')
+  const [loading, setLoading]     = useState(false)
+  const [error, setError]         = useState(null)
   const [analyzeJson, setAnalyzeJson] = useState('[]')
   const [analysisType, setAnalysisType] = useState('general')
   const [analysisResult, setAnalysisResult] = useState(null)
@@ -52,73 +52,61 @@ export default function InsightsPage() {
 
   return (
     <div className="page">
-      <div className="page-header">
-        <div className="page-title">AI INSIGHTS</div>
-        <div className="page-sub">NVIDIA NIM — natural language OSINT analysis</div>
+      <div className="breadcrumb">OSINT COMMAND / AI_INSIGHTS</div>
+
+      {/* NIM Status Bar */}
+      <div className="panel" style={{ marginBottom: 12, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+        <span className={`status-badge ${health?.status === 'healthy' ? 'status-operational' : 'status-critical'}`}>
+          ● {health?.status?.toUpperCase() || 'UNKNOWN'}
+        </span>
+        <span className="status-badge status-info" style={{ fontSize: 8 }}>
+          ● NIM: {nimOk ? 'CONFIGURED' : 'FALLBACK'}
+        </span>
+        {health?.rate_limit && (
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-dim)' }}>
+            SLOTS: {health.rate_limit.available_slots}/{health.rate_limit_per_minute}
+          </span>
+        )}
+        {models.length > 0 && (
+          <select className="form-select" style={{ width: 'auto', marginLeft: 'auto', fontSize: 10, padding: '4px 8px' }}
+            value={model} onChange={e => setModel(e.target.value)}>
+            {models.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+          </select>
+        )}
+        {!nimOk && <span className="status-badge status-warning" style={{ fontSize: 8 }}>SET NIM_API_KEY IN .ENV</span>}
       </div>
 
-      {health && (
-        <div className="panel" style={{ marginBottom: 16, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-          <span className={`badge ${health.status === 'healthy' ? 'badge-green' : 'badge-red'}`}>
-            {health.status?.toUpperCase()}
-          </span>
-          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-            NIM: <span style={{ color: nimOk ? 'var(--accent)' : 'var(--warn)' }}>
-              {nimOk ? 'CONFIGURED' : 'FALLBACK MODE'}
-            </span>
-          </span>
-          {health.rate_limit && (
-            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-              Rate limit: {health.rate_limit.available_slots}/{health.rate_limit_per_minute} slots available
-            </span>
-          )}
-          {models.length > 0 && (
-            <select
-              className="form-select"
-              style={{ width: 'auto', marginLeft: 'auto', fontSize: 11 }}
-              value={model}
-              onChange={e => setModel(e.target.value)}
-            >
-              {models.map(m => (
-                <option key={m.id} value={m.id}>{m.label}</option>
-              ))}
-            </select>
-          )}
-          {!nimOk && (
-            <span className="badge badge-yellow">Set NIM_API_KEY in .env to enable AI</span>
-          )}
-        </div>
-      )}
-
-      <div className="tabs">
-        {[['query','Natural Language'],['analyze','Analyze Repos']].map(([k, l]) => (
-          <button key={k} className={`tab ${tab === k ? 'active' : ''}`} onClick={() => setTab(k)}>{l}</button>
+      {/* Tabs */}
+      <div className="mode-b-tabs">
+        {[['query','QUERY_ENGINE'],['analyze','REPO_ANALYZER'],['signals','SIGNAL_LOG'],['geo','GEOSPATIAL']].map(([k, l]) => (
+          <button key={k} className={`mode-b-tab ${tab === k ? 'active' : ''}`} onClick={() => setTab(k)}>{l}</button>
         ))}
       </div>
 
+      {error && <div className="msg-box msg-error" style={{ marginBottom: 12 }}>{error}</div>}
+
+      {/* ── Query Tab ── */}
       {tab === 'query' && (
         <div className="panel">
-          <div className="panel-title">ASK ANYTHING ABOUT YOUR OSINT DATA</div>
+          <div className="panel-header"><MessageSquare size={11} /> NATURAL_LANGUAGE_QUERY</div>
           <div className="form-row" style={{ marginBottom: 12 }}>
             <textarea
               className="form-input"
-              style={{ minWidth: 'unset', flex: 1, height: 80, resize: 'vertical' }}
-              placeholder="e.g. What are the most popular Python OSINT tools? What patterns do you see in these repositories?"
+              style={{ minWidth: 'unset', flex: 1, height: 80, resize: 'vertical', fontFamily: 'var(--font-mono)', fontSize: 12, background: 'var(--bg-terminal)' }}
+              placeholder="SELECT * FROM osint_data WHERE query = 'most popular Python OSINT tools'..."
               value={query}
               onChange={e => setQuery(e.target.value)}
             />
           </div>
           <button className="btn btn-primary" onClick={doQuery} disabled={loading || !query.trim()}>
-            <MessageSquare size={13} /> {loading ? 'Querying NIM...' : 'Ask NIM'}
+            <MessageSquare size={12} /> {loading ? '⟳ QUERYING NIM...' : '▼ EXECUTE_QUERY'}
           </button>
-
-          {error && <div className="error-box" style={{ marginTop: 12 }}>{error}</div>}
 
           {answer && (
             <div style={{ marginTop: 16 }}>
-              <div className="panel-title">RESPONSE</div>
-              <div style={{ fontSize: 12, color: 'var(--text-dim)', lineHeight: 1.8, whiteSpace: 'pre-wrap', background: 'var(--bg-card)', padding: 14, border: '1px solid var(--border)' }}>
-                {answer}
+              <div className="panel-header">NIM_RESPONSE</div>
+              <div className="terminal-block" style={{ maxHeight: 400, background: 'var(--bg-terminal)' }}>
+                <div className="terminal-line">{answer}</div>
               </div>
             </div>
           )}
@@ -133,47 +121,54 @@ export default function InsightsPage() {
           {!answer && !loading && !error && (
             <div className="empty-state" style={{ marginTop: 8 }}>
               <Brain size={32} style={{ marginBottom: 8, opacity: 0.3 }} />
-              <div>Ask a question about your OSINT data or repositories</div>
-              <div style={{ fontSize: 10, marginTop: 6, color: 'var(--text-muted)' }}>
-                e.g. "What are the most popular Python OSINT tools?"
-              </div>
+              <div style={{ fontFamily: 'var(--font-mono)', letterSpacing: 1, fontSize: 11 }}>AWAITING OPERATOR QUERY</div>
+              <div style={{ fontSize: 10, marginTop: 6, color: 'var(--text-muted)' }}>Ask anything about your OSINT data</div>
             </div>
           )}
         </div>
       )}
 
+      {/* ── Analyze Tab ── */}
       {tab === 'analyze' && (
         <div className="panel">
-          <div className="panel-title">ANALYZE REPOSITORY LIST</div>
-          <div className="form-group" style={{ marginBottom: 12 }}>
-            <label className="form-label">Analysis Type</label>
-            <select className="form-select" style={{ width: 200 }} value={analysisType} onChange={e => setAnalysisType(e.target.value)}>
-              <option value="general">General</option>
-              <option value="security">Security</option>
-              <option value="trends">Trends</option>
-              <option value="contributors">Contributors</option>
-            </select>
+          <div className="panel-header"><Brain size={11} /> REPOSITORY_ANALYSIS_ENGINE</div>
+
+          <div style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr', marginBottom: 12 }}>
+            <div className="form-group">
+              <label className="form-label">ANALYSIS TYPE</label>
+              <select className="form-select" style={{ fontSize: 11 }} value={analysisType} onChange={e => setAnalysisType(e.target.value)}>
+                <option value="general">GENERAL</option>
+                <option value="security">SECURITY</option>
+                <option value="trends">TRENDS</option>
+                <option value="contributors">CONTRIBUTORS</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">MODEL</label>
+              <select className="form-select" style={{ fontSize: 11 }} value={model} onChange={e => setModel(e.target.value)}>
+                {models.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+              </select>
+            </div>
           </div>
+
           <div className="form-group" style={{ marginBottom: 12 }}>
-            <label className="form-label">Repositories JSON (array)</label>
+            <label className="form-label">REPOSITORIES (JSON ARRAY)</label>
             <textarea
               className="form-input"
-              style={{ minWidth: 'unset', width: '100%', height: 120, resize: 'vertical', background: 'var(--bg-base)', fontFamily: 'var(--font-mono)', fontSize: 12 }}
+              style={{ minWidth: 'unset', width: '100%', height: 100, resize: 'vertical', background: 'var(--bg-terminal)', fontFamily: 'var(--font-mono)', fontSize: 11 }}
               value={analyzeJson}
               onChange={e => setAnalyzeJson(e.target.value)}
-              placeholder='[{"name": "repo", "description": "...", "stargazers_count": 100}]'
+              placeholder='[{"name": "repo", "stargazers_count": 100}]'
             />
           </div>
           <button className="btn btn-primary" onClick={doAnalyze} disabled={loading}>
-            <Brain size={13} /> {loading ? 'Analyzing...' : 'Analyze'}
+            <Brain size={12} /> {loading ? '⟳ PROCESSING...' : '▼ RUN_ANALYSIS'}
           </button>
-
-          {error && <div className="error-box" style={{ marginTop: 12 }}>{error}</div>}
 
           {analysisResult && (
             <div style={{ marginTop: 16 }}>
-              <div className="panel-title">ANALYSIS RESULT</div>
-              <div className="code-block">{JSON.stringify(analysisResult, null, 2)}</div>
+              <div className="panel-header">ANALYSIS_OUTPUT</div>
+              <div className="terminal-block" style={{ maxHeight: 300 }}>{JSON.stringify(analysisResult, null, 2)}</div>
             </div>
           )}
 
@@ -187,12 +182,36 @@ export default function InsightsPage() {
           {!analysisResult && !loading && !error && (
             <div className="empty-state" style={{ marginTop: 8 }}>
               <Brain size={32} style={{ marginBottom: 8, opacity: 0.3 }} />
-              <div>Paste repository JSON and run analysis</div>
-              <div style={{ fontSize: 10, marginTop: 6, color: 'var(--text-muted)' }}>
-                Analysis types: General, Security, Trends, Contributors
-              </div>
+              <div style={{ fontFamily: 'var(--font-mono)', letterSpacing: 1, fontSize: 11 }}>REPOSITORY DATA AWAITING ANALYSIS</div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── Signal Log Tab ── */}
+      {tab === 'signals' && (
+        <div className="panel">
+          <div className="panel-header"><AlertTriangle size={11} /> PREDICTIVE_ALERT_LOG</div>
+          <table className="data-table">
+            <thead>
+              <tr><th>TIMESTAMP</th><th>SIGNAL</th><th>SEVERITY</th><th>SOURCE</th><th>STATUS</th></tr>
+            </thead>
+            <tbody>
+              <tr><td style={{ fontFamily: 'var(--font-mono)', fontSize: 10 }}>—</td><td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 11 }}>NO SIGNALS DETECTED</td></tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* ── Geospatial Tab ── */}
+      {tab === 'geo' && (
+        <div className="panel">
+          <div className="panel-header"><Map size={11} /> GEOSPATIAL_OVERLAY</div>
+          <div className="empty-state">
+            <Map size={32} style={{ marginBottom: 8, opacity: 0.3 }} />
+            <div style={{ fontFamily: 'var(--font-mono)', letterSpacing: 1, fontSize: 11 }}>GEOSPATIAL MAP UNAVAILABLE</div>
+            <div style={{ fontSize: 10, marginTop: 6, color: 'var(--text-muted)' }}>Map visualization requires backend integration</div>
+          </div>
         </div>
       )}
     </div>
