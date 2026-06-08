@@ -318,28 +318,28 @@ Week 2: Phase 2 — Logo + Stitch UI Redesign ✅ COMPLETE
   ├── Export DESIGN.md + design tokens
   └── Apply design tokens to CSS (colors, typography scale, sharp corners)
 
-Week 3: Phase 3 — Stitch Integration (refinements)
+Week 3: Phase 3 — Stitch Integration (refinements) ✅ COMPLETE
   ├── CSS already updated with design tokens
   ├── Rebuild components per new designs if needed
   ├── Add micro-animations & loading skeletons
   ├── Test responsive behavior (mobile sidebar collapse)
   └── Deploy and review
 
-Week 4: Phase 4a — GitLab Scraper
+Week 4: Phase 4a — GitLab Scraper ✅ COMPLETE
   ├── Create gitlab_scraper.py
   ├── Add GitLab API endpoints
   ├── Add GitLab UI (SourcesPage tab)
   ├── Test with real GitLab usernames
   └── Deploy
 
-Week 5: Phase 4b — Reddit + Hacker News
+Week 5: Phase 4b — Reddit + Hacker News ✅ COMPLETE
   ├── Create reddit_scraper.py
   ├── Create hackernews_scraper.py
   ├── Add API endpoints for both
   ├── Add UI for both
   └── Deploy
 
-Week 6: Phase 4c + Phase 5 — X, Dev.to, GitHub Enhancements + Multi-Model AI
+Week 6: Phase 4c + Phase 5 — X, Dev.to, GitHub Enhancements + Multi-Model AI ✅ COMPLETE
   ├── Create x_scraper.py
   ├── Create devto_scraper.py
   ├── Add GitHub trending/starred endpoints
@@ -392,10 +392,10 @@ Week 6: Phase 4c + Phase 5 — X, Dev.to, GitHub Enhancements + Multi-Model AI
 | **Color palette** | Original dark theme | Stitch DESIGN.md tokens | ✅ Done |
 | **Corners** | 4-6px rounded | Sharp 0px (brutalist) | ✅ Done |
 | **Design tokens** | None | DESIGN.md exported from Stitch | ✅ Done |
-| **AI models** | 1 (Llama 3.1 70B) | 4 curated NIM models + user selector | 🔲 Phase 5 |
-| **Data sources** | GitHub only | GitHub + GitLab + Reddit + HN + X + Dev.to | 🔲 Phase 4 |
-| **Scrapers** | 1 | 6 | 🔲 Phase 4 |
-| **UI pages** | 7 | 7 (+ SourcesPage) | 🔲 Phase 3-4 |
+| **AI models** | 1 (Llama 3.1 70B) | 4 curated NIM models + user selector | ✅ Done |
+| **Data sources** | GitHub only | GitHub + GitLab + Reddit + HN + X + Dev.to | ✅ Done |
+| **Scrapers** | 1 | 6 | ✅ Done |
+| **UI pages** | 7 | 7 (+ SourcesPage) | ✅ Done |
 
 ---
 
