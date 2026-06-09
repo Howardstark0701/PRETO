@@ -174,8 +174,8 @@ export default function UserPage() {
                   <XAxis dataKey="name" tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'var(--font-mono)' }} />
                   <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'var(--font-mono)' }} />
                   <Tooltip
-                    contentStyle={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', fontSize: 10, borderRadius: 0 }}
-                    labelStyle={{ color: '#94a3b8' }}
+                    contentStyle={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', fontSize: 10, borderRadius: 0, color: 'var(--text-primary)' }}
+                    labelStyle={{ color: 'var(--accent)' }}
                     cursor={{ fill: 'rgba(0,212,180,0.05)' }}
                   />
                   <Bar dataKey="count" radius={[0,0,0,0]}>
