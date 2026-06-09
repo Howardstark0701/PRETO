@@ -1041,11 +1041,17 @@ async def search_gitlab_projects(query: str, per_page: int = 30):
     tags=["sources"]
 )
 async def get_reddit_user(username: str):
-    """Fetch Reddit user profile info."""
-    user = await reddit_scraper.get_user_info(username)
-    if not user:
-        raise HTTPException(status_code=404, detail=f"Reddit user {username} not found")
-    return user
+    """Fetch Reddit user profile via public JSON API."""
+    try:
+        user = await reddit_scraper.get_user_info(username)
+        if not user:
+            raise HTTPException(status_code=404, detail=f"Reddit user '{username}' not found or account suspended")
+        return user
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Reddit user error for {username}: {e}")
+        raise HTTPException(status_code=502, detail=f"Reddit API error: {str(e)}")
 
 
 @router.get(
@@ -1053,10 +1059,14 @@ async def get_reddit_user(username: str):
     summary="Get Reddit user submissions",
     tags=["sources"]
 )
-async def get_reddit_submissions(username: str, limit: int = 25):
-    """Fetch Reddit user's recent submissions."""
-    posts = await reddit_scraper.get_user_submissions(username, limit)
-    return {"username": username, "source": "reddit", "posts": posts, "count": len(posts)}
+async def get_reddit_submissions(username: str, limit: int = Query(25, ge=1, le=100)):
+    """Fetch Reddit user's recent posts via public JSON API."""
+    try:
+        posts = await reddit_scraper.get_user_submissions(username, limit)
+        return {"username": username, "source": "reddit", "posts": posts, "count": len(posts)}
+    except Exception as e:
+        logger.error(f"Reddit submissions error for {username}: {e}")
+        raise HTTPException(status_code=502, detail=f"Reddit API error: {str(e)}")
 
 
 # ============================================================================
@@ -1097,11 +1107,22 @@ async def get_hn_submissions(username: str, limit: int = 20):
     tags=["sources"]
 )
 async def get_x_user(username: str):
-    """Fetch X/Twitter user profile info."""
-    user = await x_scraper.get_user(username)
-    if not user:
-        raise HTTPException(status_code=404, detail=f"X user {username} not found")
-    return user
+    """
+    Fetch X/Twitter user profile via API v2.
+    Requires X_BEARER_TOKEN in environment. Returns error payload (not 404)
+    when token is missing so the frontend can display a configuration hint.
+    """
+    try:
+        user = await x_scraper.get_user(username)
+        if not user:
+            raise HTTPException(status_code=404, detail=f"X user '{username}' not found")
+        # Return error payload with 200 so frontend can render the hint
+        return user
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"X user error for {username}: {e}")
+        raise HTTPException(status_code=502, detail=f"X API error: {str(e)}")
 
 
 @router.get(
@@ -1109,10 +1130,14 @@ async def get_x_user(username: str):
     summary="Get X/Twitter user tweets",
     tags=["sources"]
 )
-async def get_x_tweets(username: str, max_results: int = 10):
-    """Fetch X/Twitter user's recent tweets."""
-    tweets = await x_scraper.get_tweets(username, max_results)
-    return {"username": username, "source": "x", "tweets": tweets, "count": len(tweets)}
+async def get_x_tweets(username: str, max_results: int = Query(10, ge=5, le=100)):
+    """Fetch X/Twitter user's recent tweets via API v2."""
+    try:
+        tweets = await x_scraper.get_tweets(username, max_results)
+        return {"username": username, "source": "x", "tweets": tweets, "count": len(tweets)}
+    except Exception as e:
+        logger.error(f"X tweets error for {username}: {e}")
+        raise HTTPException(status_code=502, detail=f"X API error: {str(e)}")
 
 
 # ============================================================================
