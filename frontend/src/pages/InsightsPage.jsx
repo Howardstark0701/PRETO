@@ -302,6 +302,9 @@ export default function InsightsPage() {
             onChange={e => setFeedUsername(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && loadActivityFeed()}
           />
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-muted)', marginTop: 4, letterSpacing: 0.5 }}>
+            ⓘ Enter bare username only — no prefixes: GitHub/GitLab/HN/Dev.to → <span style={{ color: 'var(--accent)' }}>torvalds</span> · Reddit → <span style={{ color: 'var(--accent)' }}>spez</span> (no u/) · X → <span style={{ color: 'var(--accent)' }}>elonmusk</span> (no @)
+          </div>
 
           {/* Source filter pills + toggle group row */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>

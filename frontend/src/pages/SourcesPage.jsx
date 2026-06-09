@@ -39,7 +39,7 @@ function GitLabTab() {
   }
 
   return (
-    <SourceTabShell username={username} setUsername={setUsername} onSearch={load} loading={loading} error={error} placeholder="GITLAB USERNAME" sourceCls="source-badge-gitlab">
+    <SourceTabShell username={username} setUsername={setUsername} onSearch={load} loading={loading} error={error} placeholder="e.g. torvalds" hint="Enter the GitLab username (no @ or prefix)" sourceCls="source-badge-gitlab">
       {projects?.projects?.length > 0 && (
         <>
           <div className="panel-header" style={{ marginBottom: 10 }}>PROJECTS ({projects.count})</div>
@@ -75,7 +75,7 @@ function RedditTab() {
   }
 
   return (
-    <SourceTabShell username={username} setUsername={setUsername} onSearch={load} loading={loading} error={error} placeholder="REDDIT USERNAME" sourceCls="source-badge-reddit">
+    <SourceTabShell username={username} setUsername={setUsername} onSearch={load} loading={loading} error={error} placeholder="e.g. spez" hint="Enter username only — no u/ or r/ prefix" sourceCls="source-badge-reddit">
       {userInfo && (
         <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginBottom: 16 }}>
           <StatBox val={userInfo.link_karma?.toLocaleString()} label="LINK KARMA" />
@@ -120,7 +120,7 @@ function HackerNewsTab() {
   }
 
   return (
-    <SourceTabShell username={username} setUsername={setUsername} onSearch={load} loading={loading} error={error} placeholder="HN USERNAME" sourceCls="source-badge-hn">
+    <SourceTabShell username={username} setUsername={setUsername} onSearch={load} loading={loading} error={error} placeholder="e.g. dang" hint="Enter HN username exactly as shown on the profile" sourceCls="source-badge-hn">
       {userInfo && (
         <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 16 }}>
           <StatBox val={userInfo.karma?.toLocaleString()} label="KARMA" />
@@ -171,7 +171,7 @@ function XTab() {
   const hasTokenError = userInfo?.error
 
   return (
-    <SourceTabShell username={username} setUsername={setUsername} onSearch={load} loading={loading} error={error} placeholder="X USERNAME" sourceCls="source-badge-x">
+    <SourceTabShell username={username} setUsername={setUsername} onSearch={load} loading={loading} error={error} placeholder="e.g. elonmusk" hint="Enter username without @ symbol" sourceCls="source-badge-x">
       {hasTokenError && <div className="msg-box msg-error" style={{ marginBottom: 12 }}>{userInfo.error}</div>}
       {userInfo && !hasTokenError && (
         <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginBottom: 16 }}>
@@ -222,7 +222,7 @@ function DevtoTab() {
   }
 
   return (
-    <SourceTabShell username={username} setUsername={setUsername} onSearch={load} loading={loading} error={error} placeholder="DEV.TO USERNAME" sourceCls="source-badge-devto">
+    <SourceTabShell username={username} setUsername={setUsername} onSearch={load} loading={loading} error={error} placeholder="e.g. ben" hint="Enter the Dev.to username from their profile URL" sourceCls="source-badge-devto">
       {userInfo && (
         <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginBottom: 16 }}>
           {userInfo.name && <StatBox val={userInfo.name} label="NAME" />}
@@ -283,7 +283,7 @@ function SourceCard({ name, desc, meta, tags, url, sourceCls }) {
   )
 }
 
-function SourceTabShell({ username, setUsername, onSearch, loading, error, placeholder, sourceCls, children }) {
+function SourceTabShell({ username, setUsername, onSearch, loading, error, placeholder, hint, sourceCls, children }) {
   return (
     <>
       <div className="panel" style={{ marginBottom: 16 }}>
@@ -293,6 +293,11 @@ function SourceTabShell({ username, setUsername, onSearch, loading, error, place
             <input className="form-input" style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}
               placeholder={placeholder} value={username}
               onChange={e => setUsername(e.target.value)} onKeyDown={e => e.key === 'Enter' && onSearch()} />
+            {hint && (
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-muted)', marginTop: 4, letterSpacing: 0.5 }}>
+                ⓘ {hint}
+              </div>
+            )}
           </div>
           <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={onSearch} disabled={loading}>
             <Search size={12} /> QUERY SOURCE
