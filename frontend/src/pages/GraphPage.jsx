@@ -110,10 +110,10 @@ function renderGraph(svgEl, { nodes, links }, onSelect) {
   const linkGlowColor = { owns: 'rgba(0,212,180,0.15)', uses: 'transparent', contributed: 'rgba(139,92,246,0.15)' }
 
   const sim = d3.forceSimulation(nodes)
-    .force('link',      d3.forceLink(links).id(d => d.id).distance(d => ({ owns: 120, uses: 70, contributed: 80 }[d.type] || 80)).strength(0.6))
-    .force('charge',    d3.forceManyBody().strength(-260))
+    .force('link',      d3.forceLink(links).id(d => d.id).distance(d => ({ owns: 160, uses: 90, contributed: 100 }[d.type] || 100)).strength(0.5))
+    .force('charge',    d3.forceManyBody().strength(-360))
     .force('center',    d3.forceCenter(width / 2, height / 2))
-    .force('collision', d3.forceCollide(26))
+    .force('collision', d3.forceCollide(34))
 
   // Glow edges (behind regular edges)
   const glowLink = g.append('g').selectAll('line').data(links).join('line')
@@ -155,12 +155,18 @@ function renderGraph(svgEl, { nodes, links }, onSelect) {
     .attr('stroke-opacity', 0.5)
 
   node.append('text')
-    .attr('dy',           d => radius(d) + 12)
+    .attr('dy',           d => radius(d) + 14)
     .attr('text-anchor',  'middle')
     .attr('fill',         '#94a3b8')
-    .attr('font-size',    d => d.type === 'user' ? 11 : 8.5)
+    .attr('font-size',    d => d.type === 'user' ? 11 : 9)
     .attr('font-family',  'JetBrains Mono, monospace')
-    .text(d => d.label.length > 16 ? d.label.slice(0, 14) + '…' : d.label)
+    .attr('clip-path',    (d, i) => `url(#clip-${i})`)
+    .text(d => d.label.length > 18 ? d.label.slice(0, 16) + '…' : d.label)
+
+  // stagger labels for lang + contributor nodes to reduce overlap
+  node.filter(d => d.type === 'lang' || d.type === 'contributor')
+    .select('text')
+    .attr('dy', (d, i) => radius(d) + (i % 2 === 0 ? 14 : 22))
 
   node.filter(d => d.type === 'repo' && d.stars > 0)
     .append('text')
@@ -336,7 +342,7 @@ export default function GraphPage() {
       )}
 
       {/* Main area: canvas + detail panel */}
-      <div style={{ display: 'flex', gap: 10, flex: 1, minHeight: 400 }}>
+      <div style={{ display: 'flex', gap: 10, flex: 1, minHeight: 520 }}>
         {/* SVG canvas */}
         <div style={{
           flex: 1, background: 'var(--bg-panel)', border: '1px solid var(--border)',

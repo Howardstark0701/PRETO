@@ -304,10 +304,11 @@ export default function InsightsPage() {
           />
 
           {/* Source filter pills + toggle group row */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             {/* Left side: FETCH button + platform pills */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
-              <button className="btn btn-primary" onClick={loadActivityFeed} disabled={feedLoading} style={{ padding: '4px 14px', fontSize: 10, letterSpacing: 1 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, alignItems: 'center' }}>
+              <button className="btn btn-primary" onClick={loadActivityFeed} disabled={feedLoading}
+                style={{ padding: '5px 14px', fontSize: 11, letterSpacing: 1 }}>
                 {feedLoading ? '⟳ FETCHING...' : '▼ FETCH'}
               </button>
               {ALL_SOURCES.map(s => {
@@ -316,8 +317,9 @@ export default function InsightsPage() {
                 return (
                   <button key={s} onClick={() => toggleSource(s)}
                     style={{
-                      fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: 1, cursor: 'pointer',
-                      padding: '3px 10px', border: `1px solid ${active ? col : 'var(--border)'}`, background: active ? `${col}18` : 'transparent',
+                      fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, cursor: 'pointer',
+                      padding: '3px 10px', border: `1px solid ${active ? col : 'var(--border)'}`,
+                      background: active ? `${col}18` : 'transparent',
                       color: active ? col : 'var(--text-muted)', textTransform: 'uppercase',
                     }}>
                     {s === 'hn' ? 'HN' : s === 'x' ? 'X' : s.toUpperCase()}
@@ -326,11 +328,13 @@ export default function InsightsPage() {
               })}
             </div>
 
-            {/* Right side: view toggle group — shared inset container */}
-            <div className="toggle-group">
+            {/* Right side: LIST / TIMELINE toggle */}
+            <div className="toggle-group" style={{ marginLeft: 'auto' }}>
               {['list','timeline'].map(v => (
                 <button key={v} onClick={() => setFeedView(v)} className={feedView === v ? 'active' : ''}>
-                  {v === 'list' ? <><List size={10} style={{ marginRight: 4, verticalAlign: 'middle' }} /> LIST</> : <><Clock size={10} style={{ marginRight: 4, verticalAlign: 'middle' }} /> TIMELINE</>}
+                  {v === 'list'
+                    ? <><List size={11} style={{ marginRight: 4, verticalAlign: 'middle' }} />LIST</>
+                    : <><Clock size={11} style={{ marginRight: 4, verticalAlign: 'middle' }} />TIMELINE</>}
                 </button>
               ))}
             </div>

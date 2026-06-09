@@ -72,7 +72,10 @@ export default function SystemPage() {
 
   return (
     <div className="page">
-      <div className="breadcrumb">OSINT COMMAND / SYSTEM_MONITOR</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div className="breadcrumb" style={{ marginBottom: 0 }}>OSINT COMMAND / SYSTEM_MONITOR</div>
+        <span className="status-badge status-operational">● {health?.status === 'healthy' ? 'ALL SYSTEMS NOMINAL' : 'DEGRADED'}</span>
+      </div>
 
       {/* Top stats row */}
       <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginBottom: 16 }}>
@@ -123,10 +126,12 @@ export default function SystemPage() {
       <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1.2fr 0.8fr', marginBottom: 16 }}>
         {/* Live Terminal */}
         <div className="panel" style={{ display: 'flex', flexDirection: 'column' }}>
-          <div className="panel-header">
-            <Terminal size={11} /> LIVE_TERMINAL: ~/OSINT/MONITOR
-            <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-dim)' }}>
-              PID: {Math.floor(Math.random() * 9000 + 1000)} | TTY: PTS/0
+          <div className="panel-header" style={{ justifyContent: 'space-between' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Terminal size={11} /> LIVE_TERMINAL
+            </span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-dim)', letterSpacing: 1 }}>
+              PID:{Math.floor(Math.random() * 9000 + 1000)} · TTY:PTS/0 · v{health?.version || '4.2.0'}
             </span>
           </div>
           <div className="terminal-block" style={{ flex: 1, maxHeight: 'none', minHeight: 200 }}>
@@ -141,10 +146,12 @@ export default function SystemPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* API Endpoint Status */}
           <div className="panel">
-            <div className="panel-header">
-              <RefreshCw size={11} /> API ENDPOINT STATUS
-              <button className="btn btn-sm btn-secondary" style={{ marginLeft: 'auto' }} onClick={loadAll} disabled={loading}>
-                {loading ? '...' : '⟳'}
+            <div className="panel-header" style={{ justifyContent: 'space-between' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <RefreshCw size={11} /> ENDPOINT STATUS
+              </span>
+              <button className="btn btn-sm btn-secondary" onClick={loadAll} disabled={loading}>
+                {loading ? '...' : '⟳ REFRESH'}
               </button>
             </div>
             {msg && <div className="msg-box msg-info" style={{ marginBottom: 8, fontSize: 9 }}>{msg}</div>}

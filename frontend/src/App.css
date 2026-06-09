@@ -3,9 +3,10 @@
    ════════════════════════════════════════════════════════════════ */
 
 /* ── Breadcrumb ─────────────────────────────────────── */
+/* ── Breadcrumb ─────────────────────────────── */
 .breadcrumb {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 12px;
   color: var(--text-muted);
   margin-bottom: 16px;
   letter-spacing: 0.3px;
@@ -20,14 +21,14 @@
 }
 .mode-b-tab {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 1px;
   color: var(--text-muted);
   cursor: pointer;
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  padding: 8px 16px;
+  padding: 9px 18px;
   margin-bottom: -1px;
   text-transform: uppercase;
 }
@@ -43,7 +44,7 @@
   align-items: center;
   gap: 6px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 1.5px;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -53,9 +54,9 @@
 /* ── Status Badges (dot style) ────────────────────────── */
 .status-badge {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.5px;
-  padding: 2px 8px;
+  padding: 3px 9px;
   border: 1px solid;
   display: inline-flex;
   align-items: center;
@@ -69,8 +70,8 @@
 
 /* ── Message Boxes ─────────────────────────────────────── */
 .msg-box {
-  padding: 8px 12px;
-  font-size: 11px;
+  padding: 10px 14px;
+  font-size: 13px;
   font-family: var(--font-mono);
   border: 1px solid;
 }
@@ -78,21 +79,21 @@
 .msg-error { background: rgba(239,68,68,0.08); border-color: var(--danger-dim); color: var(--danger); }
 
 /* ── Small Button ──────────────────────────────────────── */
-.btn-sm { padding: 4px 10px; font-size: 9px; letter-spacing: 0.5px; }
+.btn-sm { padding: 5px 12px; font-size: 11px; letter-spacing: 0.5px; }
 
 /* ── Meta Row (key: value two-column) ────────────────── */
 .meta-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 0;
+  padding: 7px 0;
   border-bottom: 1px solid var(--border);
-  font-size: 11px;
+  font-size: 13px;
 }
 .meta-row:last-child { border-bottom: none; }
 .meta-key {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 1px;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -100,7 +101,7 @@
 .meta-val {
   font-family: var(--font-mono);
   color: var(--text-dim);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 /* ── Progress Bar ──────────────────────────────────────── */
@@ -119,10 +120,10 @@
 .terminal-block {
   background: var(--bg-terminal);
   border: 1px solid var(--border);
-  padding: 12px;
+  padding: 14px;
   font-family: var(--font-mono);
-  font-size: 10px;
-  line-height: 1.6;
+  font-size: 12px;
+  line-height: 1.7;
   overflow: auto;
   max-height: 200px;
 }
@@ -194,21 +195,21 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   background: var(--accent);
   color: #000;
   font-family: var(--font-heading);
   font-weight: 900;
-  font-size: 20px;
+  font-size: 26px;
 }
 .auth-title {
   text-align: center;
   font-family: var(--font-heading);
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 700;
   color: var(--accent);
-  letter-spacing: 2px;
+  letter-spacing: 4px;
   margin-bottom: 4px;
 }
 .auth-subtitle {
@@ -216,7 +217,7 @@
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text-muted);
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   margin-bottom: 24px;
 }
 .auth-form { display: flex; flex-direction: column; gap: 14px; }
@@ -363,7 +364,7 @@
   letter-spacing: -1px;
 }
 .logo-text {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: 3px;
@@ -371,7 +372,7 @@
 }
 
 .sidebar-label {
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 2px;
   color: var(--text-muted);
   padding: 0 16px 16px;
@@ -390,10 +391,10 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 8px 10px;
+  padding: 9px 10px;
   border-radius: var(--radius);
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.5px;
   transition: all 0.15s;
   text-decoration: none;
@@ -410,12 +411,12 @@
 }
 
 .sidebar-footer {
-  padding: 12px 16px;
+  padding: 14px 16px;
   border-top: 1px solid var(--border);
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 1.5px;
   color: var(--accent);
 }
@@ -444,14 +445,14 @@
   margin-bottom: 24px;
 }
 .page-title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: 1px;
   font-family: var(--font-heading);
 }
 .page-sub {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-muted);
   margin-top: 4px;
   letter-spacing: 0.5px;
@@ -465,7 +466,7 @@
   padding: 16px;
 }
 .panel-title {
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 1.5px;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -535,7 +536,7 @@
   gap: 5px;
 }
 .form-label {
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 1px;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -544,9 +545,9 @@
   background: var(--bg-base);
   border: 1px solid var(--border-light);
   border-radius: var(--radius);
-  padding: 8px 10px;
+  padding: 9px 11px;
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: 14px;
   min-width: 200px;
   transition: border-color 0.15s;
 }
@@ -558,9 +559,9 @@
   background: var(--bg-base);
   border: 1px solid var(--border-light);
   border-radius: var(--radius);
-  padding: 8px 10px;
+  padding: 9px 11px;
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
 }
 .form-select:focus { outline: none; border-color: var(--accent); }
@@ -569,8 +570,8 @@
 .btn {
   border: none;
   border-radius: var(--radius);
-  padding: 8px 14px;
-  font-size: 12px;
+  padding: 9px 16px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.5px;
   cursor: pointer;
@@ -625,14 +626,14 @@
   padding: 14px;
 }
 .stat-val {
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 700;
   color: var(--accent);
   line-height: 1;
   font-family: var(--font-heading);
 }
 .stat-label {
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 1px;
   color: var(--text-muted);
   margin-top: 5px;
@@ -766,7 +767,7 @@
   align-items: center;
   gap: 8px;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 13px;
   padding: 24px 0;
 }
 .spinner {
@@ -791,28 +792,29 @@
   text-align: center;
   padding: 48px 24px;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 /* ── Table ──────────────────────────────────────────────────────── */
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: 13px;
 }
 .data-table th {
   text-align: left;
-  padding: 8px 12px;
+  padding: 9px 13px;
   border-bottom: 1px solid var(--border);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 1px;
   color: var(--text-muted);
   text-transform: uppercase;
 }
 .data-table td {
-  padding: 9px 12px;
+  padding: 10px 13px;
   border-bottom: 1px solid var(--border);
   color: var(--text-dim);
+  font-size: 13px;
 }
 .data-table tr:hover td { background: var(--bg-hover); }
 
@@ -917,10 +919,10 @@
 }
 
 .toggle-group {
-  display: flex;
-  border: 1px solid #1a2535;
-  background: #080c10;
-  padding: 3px;
+  display: inline-flex;
+  border: 1px solid var(--border);
+  background: var(--bg-terminal);
+  padding: 2px;
   gap: 2px;
 }
 
@@ -928,17 +930,26 @@
   background: transparent;
   border: none;
   border-top: 2px solid transparent;
-  color: #6a8aaa;
-  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.08em;
-  padding: 4px 14px;
+  padding: 5px 16px;
   cursor: pointer;
   text-transform: uppercase;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toggle-group button:hover {
+  color: var(--text-dim);
 }
 
 .toggle-group button.active {
-  border-top: 2px solid #00d4b4;
-  background: #0d1219;
-  color: #ffffff;
+  border-top: 2px solid var(--accent);
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6);
 }

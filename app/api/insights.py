@@ -22,10 +22,17 @@ NIM_API_URL = os.getenv("NIM_API_URL", "https://integrate.api.nvidia.com/v1")
 NIM_MODEL = os.getenv("NIM_MODEL", "meta/llama-3.1-70b-instruct")
 
 ALLOWED_MODELS = {
-    "meta/llama-3.1-70b-instruct": "Llama 3.1 70B (Default)",
-    "meta/llama-3.1-8b-instruct": "Llama 3.1 8B (Fast)",
-    "mistralai/mixtral-8x22b-instruct-v0.1": "Mixtral 8x22B",
-    "nvidia/nemotron-4-340b-instruct": "Nemotron 4 340B (Deep)",
+    "meta/llama-3.1-70b-instruct":          "Llama 3.1 70B",
+    "meta/llama-3.1-8b-instruct":           "Llama 3.1 8B (Fast)",
+    "meta/llama-3.2-3b-instruct":           "Llama 3.2 3B (Lightweight)",
+    "meta/llama-3.3-70b-instruct":          "Llama 3.3 70B",
+    "mistralai/mixtral-8x22b-instruct-v0.1":"Mixtral 8x22B",
+    "mistralai/mistral-large-2-instruct":   "Mistral Large 2",
+    "nvidia/nemotron-4-340b-instruct":      "Nemotron 4 340B (Deep)",
+    "nvidia/llama-3.1-nemotron-70b-instruct":"Nemotron 70B",
+    "google/gemma-2-27b-it":               "Gemma 2 27B",
+    "microsoft/phi-3-medium-128k-instruct": "Phi-3 Medium",
+    "qwen/qwen2-72b-instruct":             "Qwen2 72B",
 }
 
 # Rate Limiting: 40 requests per minute

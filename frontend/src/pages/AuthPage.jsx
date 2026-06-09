@@ -217,13 +217,13 @@ export default function AuthPage() {
   return (
     <div className="auth-mode-b">
       <div className="auth-card">
-        <div className="auth-card-badge"><Lock size={10} /> SECURE-AES256</div>
+        <div className="auth-card-badge"><Lock size={9} /> AES-256</div>
 
         <div className="auth-logo">
           <span className="auth-logo-mark">P</span>
         </div>
-        <div className="auth-title">OSINT COMMAND</div>
-        <div className="auth-subtitle">PRETO Terminal v4.2.0</div>
+        <div className="auth-title">PRETO</div>
+        <div className="auth-subtitle">INTELLIGENCE PLATFORM · v4.2.0</div>
 
         <div className="mode-b-tabs" style={{ marginBottom: 20 }}>
           {[['login','LOGIN'],['register','REGISTER']].map(([k,l]) => (
@@ -233,22 +233,22 @@ export default function AuthPage() {
         </div>
 
         {error && <div className="msg-box msg-error" style={{ marginBottom: 14 }}>{error}</div>}
-        {msg   && <div className="msg-box msg-info" style={{ marginBottom: 14 }}>{msg}</div>}
+        {msg   && <div className="msg-box msg-info"  style={{ marginBottom: 14 }}>{msg}</div>}
 
         {tab === 'login' && (
           <div className="auth-form">
             <div className="auth-field">
               <label className="auth-label">OPERATOR ID</label>
-              <input className="auth-input" placeholder="OP-XXXX-XXXX"
+              <input className="auth-input" placeholder="username"
                 value={form.username} onChange={e => setForm(f => ({...f, username: e.target.value}))}
-                onKeyDown={e => e.key==='Enter' && doLogin()} />
+                onKeyDown={e => e.key==='Enter' && doLogin()} autoComplete="username" />
             </div>
             <div className="auth-field">
               <label className="auth-label">ACCESS KEY</label>
               <div className="auth-pw-wrap">
                 <input className="auth-input" type={showPw ? 'text' : 'password'} placeholder="••••••••"
                   value={form.password} onChange={e => setForm(f => ({...f, password: e.target.value}))}
-                  onKeyDown={e => e.key==='Enter' && doLogin()} />
+                  onKeyDown={e => e.key==='Enter' && doLogin()} autoComplete="current-password" />
                 <button className="auth-pw-toggle" onClick={() => setShowPw(!showPw)} tabIndex={-1}>
                   {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
@@ -258,9 +258,9 @@ export default function AuthPage() {
             <div className="auth-row">
               <label className="auth-checkbox">
                 <input type="checkbox" checked={persist} onChange={e => setPersist(e.target.checked)} />
-                <span>Persistence Mode</span>
+                <span>Persist session</span>
               </label>
-              <span className="status-badge status-operational">● NODE: US-EAST-1</span>
+              <span className="status-badge status-operational" style={{ fontSize: 9 }}>● SECURE</span>
             </div>
 
             <button className="btn btn-primary auth-cta" onClick={doLogin} disabled={loading}>
@@ -268,21 +268,21 @@ export default function AuthPage() {
             </button>
 
             <div className="auth-oauth">
-              <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center', fontSize: 12 }}
+              <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center' }}
                 onClick={() => auth.githubLogin()} disabled={ghStatus && !ghStatus.configured}>
                 <Github size={14} /> CONTINUE WITH GITHUB
               </button>
               {ghStatus && !ghStatus.configured && (
-                <div style={{ fontSize: 9, color: 'var(--warn)', marginTop: 6, textAlign: 'center' }}>
-                  GITHUB OAUTH UNCONFIGURED — ADD CLIENT_ID/SECRET TO .ENV
+                <div style={{ fontSize: 9, color: 'var(--warn)', marginTop: 6, textAlign: 'center', fontFamily: 'var(--font-mono)' }}>
+                  GITHUB OAUTH UNCONFIGURED
                 </div>
               )}
             </div>
 
             <div className="auth-footer">
-              <span className="auth-footer-item">AUTH_ERR_LOG: 0</span>
+              <span className="auth-footer-item">v4.2.0</span>
               <div className="auth-footer-links">
-                <a href="#">Security Policy</a>
+                <a href="#">Docs</a>
                 <a href="#">Help</a>
               </div>
             </div>
@@ -291,10 +291,16 @@ export default function AuthPage() {
 
         {tab === 'register' && (
           <div className="auth-form">
-            {[['username','OPERATOR ID','text'],['email','EMAIL ADDRESS','email'],['password','ACCESS KEY','password'],['full_name','FULL NAME (OPTIONAL)','text']].map(([k, label, type]) => (
+            {[
+              ['username', 'OPERATOR ID',           'text',     'username'],
+              ['email',    'EMAIL ADDRESS',          'email',    'email'],
+              ['password', 'ACCESS KEY',             'password', 'new-password'],
+              ['full_name','FULL NAME (OPTIONAL)',   'text',     'name'],
+            ].map(([k, label, type, autoComplete]) => (
               <div key={k} className="auth-field">
                 <label className="auth-label">{label}</label>
                 <input className="auth-input" type={type} placeholder={label}
+                  autoComplete={autoComplete}
                   value={form[k]} onChange={e => setForm(f => ({...f, [k]: e.target.value}))} />
               </div>
             ))}
@@ -303,9 +309,9 @@ export default function AuthPage() {
             </button>
 
             <div className="auth-footer">
-              <span className="auth-footer-item">AUTH_ERR_LOG: 0</span>
+              <span className="auth-footer-item">v4.2.0</span>
               <div className="auth-footer-links">
-                <a href="#">Security Policy</a>
+                <a href="#">Docs</a>
                 <a href="#">Help</a>
               </div>
             </div>
@@ -315,11 +321,11 @@ export default function AuthPage() {
 
       <div className="auth-bottom-bar">
         <div className="auth-bottom-left">
-          <span className="auth-bottom-label">NETWORK STATUS</span>
+          <span className="auth-bottom-label">STATUS</span>
           <span className="auth-bottom-value">SECURE ENCLAVE ACTIVE</span>
         </div>
         <div className="auth-bottom-right">
-          <span className="auth-bottom-label">LAST SIGNAL</span>
+          <span className="auth-bottom-label">LOCAL TIME</span>
           <span className="auth-bottom-value">{new Date().toLocaleTimeString()}</span>
         </div>
       </div>

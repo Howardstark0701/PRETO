@@ -15,29 +15,15 @@ import GraphPage       from './pages/GraphPage'
 import { auth }        from './api'
 import './App.css'
 
-const NAV_SECTIONS = [
-  { label: 'REPOSITORY', items: [
-    { to: '/', icon: Search, label: 'SEARCH' },
-  ]},
-  { label: 'INTELLIGENCE', items: [
-    { to: '/user', icon: Users, label: 'USER INTEL' },
-    { to: '/sources', icon: Globe, label: 'SOURCES' },
-  ]},
-  { label: 'NETWORK', items: [
-    { to: '/graph', icon: GitBranch, label: 'GRAPH' },
-  ]},
-  { label: 'AI INSIGHTS', items: [
-    { to: '/insights', icon: Brain, label: 'INSIGHTS' },
-  ]},
-  { label: 'ANALYTICS', items: [
-    { to: '/analytics', icon: BarChart2, label: 'ANALYTICS' },
-  ]},
-  { label: 'SYSTEM', items: [
-    { to: '/system', icon: Settings, label: 'SYSTEM' },
-  ]},
-  { label: 'SECURITY', items: [
-    { to: '/auth', icon: Shield, label: 'AUTH' },
-  ]},
+const NAV_ITEMS = [
+  { to: '/',          icon: Search,   label: 'SEARCH'    },
+  { to: '/user',      icon: Users,    label: 'USER INTEL' },
+  { to: '/sources',   icon: Globe,    label: 'SOURCES'   },
+  { to: '/graph',     icon: GitBranch,label: 'GRAPH'     },
+  { to: '/insights',  icon: Brain,    label: 'INSIGHTS'  },
+  { to: '/analytics', icon: BarChart2,label: 'ANALYTICS' },
+  { to: '/system',    icon: Settings, label: 'SYSTEM'    },
+  { to: '/auth',      icon: Shield,   label: 'AUTH'      },
 ]
 
 export default function App() {
@@ -77,25 +63,17 @@ export default function App() {
         </div>
         <div className="sidebar-label">INTELLIGENCE PLATFORM v4.2.0</div>
         <nav className="sidebar-nav">
-          {NAV_SECTIONS.map(section => (
-            <div key={section.label} style={{ marginBottom: 4 }}>
-              <div style={{
-                fontFamily: 'var(--font-mono)', fontSize: 7, letterSpacing: 2,
-                color: 'var(--text-muted)', padding: '8px 10px 4px', textTransform: 'uppercase',
-              }}>{section.label}</div>
-              {section.items.map(({ to, icon: Icon, label }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end={to === '/'}
-                  className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-                  onClick={closeSidebar}
-                >
-                  <Icon size={14} />
-                  <span>{label}</span>
-                </NavLink>
-              ))}
-            </div>
+          {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/'}
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              onClick={closeSidebar}
+            >
+              <Icon size={14} />
+              <span>{label}</span>
+            </NavLink>
           ))}
         </nav>
         <div className="sidebar-footer">
